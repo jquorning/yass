@@ -55,32 +55,45 @@ procedure Yass is
    -- Returns True if entered arguments are valid, otherwise False.
    -- SOURCE
    function Valid_Arguments
-     (Message: String; Exist: Boolean) return Boolean with
-      Pre => Message'Length > 0
-   is
+     (Message: String; Exist: Boolean) return Boolean
+   with
+      Pre => Message'Length > 0;
    -- ****
+
+   ---------------------
+   -- Valid_Arguments --
+   ---------------------
+
+   function Valid_Arguments
+     (Message : String; Exist : Boolean) return Boolean
+   is
    begin
-      -- User does not entered name of the site project directory
+      --  User does not entered name of the site project directory
       if Argument_Count < 2 then
-         Show_Message(Text => "Please specify directory name " & Message);
+         Show_Message (Text => "Please specify directory name " & Message);
          return False;
       end if;
-      -- Assign Work_Directory
-      if Index
-          (Source => Argument(Number => 2),
-           Pattern => Containing_Directory(Name => Current_Directory)) =
-        1 then
+
+      --  Assign Work_Directory
+      if
+        Index
+          (Source  => Argument (Number => 2),
+           Pattern => Containing_Directory (Name => Current_Directory)) = 1
+      then
          Work_Directory :=
-           To_Unbounded_String(Source => Argument(Number => 2));
+           To_Unbounded_String (Source => Argument(Number => 2));
       else
          Work_Directory :=
            To_Unbounded_String
              (Source =>
-                Current_Directory & Dir_Separator & Argument(Number => 2));
+                Current_Directory & Dir_Separator & Argument (Number => 2));
       end if;
-      -- Check if selected directory exist, if not, return False
-      if Ada.Directories.Exists(Name => To_String(Source => Work_Directory)) =
-        Exist then
+
+      --  Check if selected directory exist, if not, return False
+      if
+        Ada.Directories.Exists (Name => To_String (Source => Work_Directory)) =
+        Exist
+      then
          if Exist then
             Show_Message
               (Text =>
@@ -92,17 +105,23 @@ procedure Yass is
          end if;
          return False;
       end if;
-      -- Check if selected directory is valid the program site project directory. Return False if not.
-      if not Exist and
+
+      --  Check if selected directory is valid the program site project
+      --  directory. Return False if not.
+      if
+        not Exist and
         not Ada.Directories.Exists
           (Name =>
-             To_String(Source => Work_Directory) & Dir_Separator &
-             "site.cfg") then
+             To_String (Source => Work_Directory) & Dir_Separator &
+             "site.cfg")
+      then
          Show_Message
            (Text =>
-              "Selected directory don't have file ""site.cfg"". Please specify proper directory.");
+              "Selected directory don't have file ""site.cfg"". " &
+              "Please specify proper directory.");
          return False;
       end if;
+
       return True;
    end Valid_Arguments;
 
