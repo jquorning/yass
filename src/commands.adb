@@ -51,7 +51,7 @@ package body Commands is
    -- Build_Site --
    ----------------
 
-   procedure Build_Site (Directory_Name : String;
+   procedure Build_Site (Directory_Name :     String;
                          Success        : out Boolean)
    is
       use Ada.Directories;
@@ -147,6 +147,8 @@ package body Commands is
       end Build;
 
    begin
+      Parse_Config (Directory_Name => Directory_Name);
+
       --  Load the program modules with 'start' hook
       Load_Modules
         (State           => "start",

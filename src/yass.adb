@@ -32,7 +32,7 @@ with GNAT.Traceback.Symbolic;
 with AWS.Net;
 
 with Commands;
-with Config; use Config;
+with Config;
 with Messages;
 
 procedure Yass
@@ -171,8 +171,8 @@ begin
           (Message => "from where page will be created.", Exist => False) then
          return;
       end if;
-      Parse_Config(Directory_Name => To_String(Source => Work_Directory));
-      Commands.Build_Site (Directory_Name => To_String(Source => Work_Directory),
+
+      Commands.Build_Site (Directory_Name => To_String (Work_Directory),
                            Success        => Success);
       if Success then
          Show_Message
@@ -214,7 +214,7 @@ begin
       Commands.Show_Help;
    end if;
 exception
-   when An_Exception : Invalid_Config_Data =>
+   when An_Exception : Config.Invalid_Config_Data =>
       Show_Message
         (Text =>
            "Invalid data in site config file ""site.cfg"". Invalid line:""" &

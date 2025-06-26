@@ -28,12 +28,12 @@ package Commands is
    -- FUNCTION
    -- Build the site from directory
    -- PARAMETERS
-   -- Directory_Name - full path to the site directory
+   -- Directory_Name - Full path to the site directory
    -- Success - Success of operation
    -- RESULT
    -- Returns True if the site was build, otherwise False.
    -- SOURCE
-   procedure Build_Site (Directory_Name : String;
+   procedure Build_Site (Directory_Name :     String;
                          Success        : out Boolean)
    with
       Pre => Directory_Name'Length > 0;
