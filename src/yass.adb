@@ -39,12 +39,11 @@ procedure Yass
 is
    use Messages;
 
-   Version: constant String := "3.1.0";
+   Version  : constant String := "3.1.0";
    Released : constant String := "2024-08-23";
    --## rule off GLOBAL_REFERENCES
-   Work_Directory: Unbounded_String := Null_Unbounded_String;
+   Work_Directory : Unbounded_String := Null_Unbounded_String;
    --## rule on GLOBAL_REFERENCES
-   Success : Boolean;
 
    -- ****if* YASS/YASS.Valid_Arguments
    -- FUNCTION
@@ -129,18 +128,20 @@ is
    end Valid_Arguments;
 
 begin
-   if Ada.Environment_Variables.Exists(Name => "YASSDIR") then
-      Set_Directory(Directory => Value(Name => "YASSDIR"));
+   if Ada.Environment_Variables.Exists (Name => "YASSDIR") then
+      Set_Directory (Directory => Value (Name => "YASSDIR"));
    end if;
-   -- No arguments or help: show available commands
-   if Argument_Count < 1 or else Argument(Number => 1) = "help" then
-      Commands.Show_Help;
-      -- Show version information
-   elsif Argument(Number => 1) = "version" then
-      Put_Line(Item => "Version: " & Version);
-      Put_Line(Item => "Released: " & Released);
 
-   -- Show license information
+   --  No arguments or help: show available commands
+   if Argument_Count < 1 or else Argument (Number => 1) = "help" then
+      Commands.Show_Help;
+
+   --  Show version information
+   elsif Argument(Number => 1) = "version" then
+      Put_Line (Item => "Version: " & Version);
+      Put_Line (Item => "Released: " & Released);
+
+   --  Show license information
    elsif Argument(Number => 1) = "license" then
       Commands.Show_License;
 
@@ -172,14 +173,18 @@ begin
          return;
       end if;
 
-      Commands.Build_Site (Directory_Name => To_String (Work_Directory),
-                           Success        => Success);
-      if Success then
-         Show_Message
-           (Text => "Site was build.", Message_Type => Messages.SUCCESS);
-      else
-         Show_Message(Text => "Site building has been interrupted.");
-      end if;
+      declare
+         Success : Boolean;
+      begin
+         Commands.Build_Site (Directory_Name => To_String (Work_Directory),
+                              Success        => Success);
+         if Success then
+            Show_Message
+              (Text => "Site was build.", Message_Type => Messages.SUCCESS);
+         else
+            Show_Message (Text => "Site building has been interrupted.");
+         end if;
+      end;
 
    --  Start server to monitor changes in selected site project
    elsif Argument (Number => 1) = "server" then
@@ -192,7 +197,7 @@ begin
 
       Show_Message (Text => "done.", Message_Type => Messages.SUCCESS);
 
-      -- Create new empty markdown file with selected name
+   --  Create new empty markdown file with selected name
    elsif Argument(Number => 1) = "createfile" then
       if Argument_Count < 2 then
          Show_Message(Text => "Please specify name of file to create.");
@@ -208,21 +213,30 @@ begin
            """ was created.",
          Message_Type => Messages.SUCCESS);
 
-      -- Unknown command entered
+   --  Unknown command entered
    else
       Show_Message(Text => "Unknown command '" & Argument(Number => 1) & "'");
       Commands.Show_Help;
+
    end if;
+
 exception
+
    when An_Exception : Config.Invalid_Config_Data =>
       Show_Message
         (Text =>
            "Invalid data in site config file ""site.cfg"". Invalid line:""" &
            Exception_Message(X => An_Exception) & """");
+
    when AWS.Net.Socket_Error =>
       Show_Message
         (Text =>
-           "Can't start program in server mode. Probably another program is using this same port, or you have still connected old instance of the program in your browser. Please close whole browser and try run the program again. If problem will persist, try to change port for the server in the site configuration.");
+           "Can't start program in server mode. Probably another program is " &
+           "using this same port, or you have still connected old instance of " &
+           "the program in your browser. Please close whole browser and try run "  &
+           "the program again. If problem will persist, try to change port for " &
+           "the server in the site configuration.");
+
    when An_Exception : others =>
       Save_Exception_Info_Block :
       declare
@@ -231,16 +245,17 @@ exception
 
          Error_File: File_Type;
       begin
-         if Ada.Directories.Exists(Name => "error.log") then
-            Open(File => Error_File, Mode => Append_File, Name => "error.log");
+         if Ada.Directories.Exists (Name => "error.log") then
+            Open (File => Error_File, Mode => Append_File, Name => "error.log");
          else
             Create
               (File => Error_File, Mode => Append_File, Name => "error.log");
          end if;
+
          Put_Line
            (File => Error_File,
-            Item => Ada.Calendar.Formatting.Image(Date => Clock));
-         Put_Line(File => Error_File, Item => Version);
+            Item => Ada.Calendar.Formatting.Image (Date => Clock));
+         Put_Line (File => Error_File, Item => Version);
          Put_Line
            (File => Error_File,
             Item => "Exception: " & Exception_Name(X => An_Exception));
@@ -250,21 +265,30 @@ exception
          Put_Line
            (File => Error_File,
             Item => "-------------------------------------------------");
+
          if Directory_Separator = '/' then
             Put_Line
               (File => Error_File,
-               Item => Symbolic_Traceback(E => An_Exception));
+               Item => Symbolic_Traceback (E => An_Exception));
          else
             Put_Line
               (File => Error_File,
-               Item => Exception_Information(X => An_Exception));
+               Item => Exception_Information (X => An_Exception));
          end if;
+
          Put_Line
            (File => Error_File,
             Item => "-------------------------------------------------");
-         Close(File => Error_File);
+
+         Close (File => Error_File);
+
          Put_Line
            (Item =>
-              "Oops, something bad happen and program crashed. Please, remember what you done before crash and report this problem at https://github.com/yet-another-static-site-generator/yass and attach (if possible) file 'error.log' (should be in this same directory).");
+              "Oops, something bad happen and program crashed. Please, remember " &
+	      "what you done before crash and report this problem at " &
+              "https://github.com/yet-another-static-site-generator/yass and " &
+              "attach (if possible) file 'error.log' (should be in this same " &
+              "directory).");
       end Save_Exception_Info_Block;
+
 end Yass;
