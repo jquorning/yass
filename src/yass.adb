@@ -24,12 +24,16 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO; use Ada.Text_IO;
+
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
+
 with AWS.Net;
 with AWS.Server;
+
 with AtomFeed;
+with Commands;
 with Config; use Config;
 with Layouts; use Layouts;
 with Messages; use Messages;
@@ -204,32 +208,6 @@ procedure Yass is
       return True;
    end Valid_Arguments;
 
-   -- ****if* YASS/YASS.Show_Help
-   -- FUNCTION
-   -- Show the program help - list of available commands
-   -- SOURCE
-   procedure Show_Help is
-   -- ****
-   begin
-      Put_Line(Item => "Possible actions:");
-      Put_Line(Item => "help - show this screen and exit");
-      Put_Line(Item => "version - show the program version and exit");
-      Put_Line(Item => "license - show short info about the program license");
-      Put_Line(Item => "readme - show content of README file");
-      Put_Line
-        (Item => "createnow [name] - create new site in ""name"" directory");
-      Put_Line
-        (Item =>
-           "create [name] - interactively create new site in ""name"" directory");
-      Put_Line(Item => "build [name] - build site in ""name"" directory");
-      Put_Line
-        (Item =>
-           "server [name] - start simple HTTP server in ""name"" directory and auto rebuild site if needed.");
-      Put_Line
-        (Item =>
-           "createfile [name] - create new empty markdown file with ""name""");
-   end Show_Help;
-
    procedure Create is
    begin
       if not Valid_Arguments
@@ -286,7 +264,7 @@ begin
    end if;
    -- No arguments or help: show available commands
    if Argument_Count < 1 or else Argument(Number => 1) = "help" then
-      Show_Help;
+      Commands.Show_Help;
       -- Show version information
    elsif Argument(Number => 1) = "version" then
       Put_Line(Item => "Version: " & Version);
@@ -464,7 +442,7 @@ begin
       -- Unknown command entered
    else
       Show_Message(Text => "Unknown command '" & Argument(Number => 1) & "'");
-      Show_Help;
+      Commands.Show_Help;
    end if;
 exception
    when An_Exception : Invalid_Config_Data =>
