@@ -25,6 +25,7 @@ with GNAT.Directory_Operations;
 with AtomFeed;
 with Config;
 with Layouts;
+with Messages;
 with Modules;
 with Sitemaps;
 with Pages;
@@ -40,6 +41,8 @@ package body Commands is
 
    use Ada.Strings.Unbounded;
    use Ada.Text_IO;
+
+   Dir_Separator : Character renames GNAT.Directory_Operations.Dir_Separator;
 
    ----------------
    -- Build_Site --
@@ -186,8 +189,6 @@ package body Commands is
                      Work_Directory : String)
    is
       use Ada.Directories;
-
-      Dir_Separator : Character renames GNAT.Directory_Operations.Dir_Separator;
    begin
       Create_Directories_Block :
       declare
@@ -292,5 +293,37 @@ package body Commands is
         (Item =>
            "createfile [name] - create new empty markdown file with ""name""");
    end Show_Help;
+
+   -----------------
+   -- Show_Readme --
+   -----------------
+
+   procedure Show_Readme (Command_Name : String)
+   is
+      use Ada.Environment_Variables;
+      use Ada.Directories;
+
+      Readme_Name : constant String :=
+        (if Ada.Environment_Variables.Exists (Name => "APPDIR")
+         then Value (Name => "APPDIR") & "/usr/share/doc/yass/README.md"
+         else Containing_Directory (Name => Command_Name) & Dir_Separator &
+              "README.md");
+      Readme_File : File_Type;
+   begin
+      if not Ada.Directories.Exists (Name => Readme_Name) then
+         Messages.Show_Message (Text => "Can't find file " & Readme_Name);
+         return;
+      end if;
+
+      Open (File => Readme_File, Mode => In_File, Name => Readme_Name);
+
+      Show_Readme_Loop :
+      while not End_Of_File(File => Readme_File) loop
+         Put_Line (Item => Get_Line (File => Readme_File));
+      end loop Show_Readme_Loop;
+
+      Close (File => Readme_File);
+
+   end Show_Readme;
 
 end Commands;

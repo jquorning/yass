@@ -126,28 +126,9 @@ begin
    elsif Argument(Number => 1) = "license" then
       Commands.Show_License;
 
-      -- Show README.md file
-   elsif Argument(Number => 1) = "readme" then
-      Show_Readme_Block :
-      declare
-         Readme_Name: constant String :=
-           (if Ada.Environment_Variables.Exists(Name => "APPDIR") then
-              Value(Name => "APPDIR") & "/usr/share/doc/yass/README.md"
-            else Containing_Directory(Name => Command_Name) & Dir_Separator &
-              "README.md");
-         Readme_File: File_Type;
-      begin
-         if not Ada.Directories.Exists(Name => Readme_Name) then
-            Show_Message(Text => "Can't find file " & Readme_Name);
-            return;
-         end if;
-         Open(File => Readme_File, Mode => In_File, Name => Readme_Name);
-         Show_Readme_Loop :
-         while not End_Of_File(File => Readme_File) loop
-            Put_Line(Item => Get_Line(File => Readme_File));
-         end loop Show_Readme_Loop;
-         Close(File => Readme_File);
-      end Show_Readme_Block;
+   --  Show README.md file
+   elsif Argument (Number => 1) = "readme" then
+      Commands.Show_Readme (Command_Name);
 
    --  Create new, selected site project directory
    elsif Argument(Number => 1) in "createnow" | "create" then

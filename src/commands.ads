@@ -48,6 +48,13 @@ package Commands is
                      Work_Directory : String);
    -- ****
 
+   -- ****f* Commands/Show_Help
+   -- FUNCTION
+   -- Show the program help - list of available commands
+   -- SOURCE
+   procedure Show_Help;
+   -- ****
+
    -- ****f* Commands/Show_License
    -- FUNCTION
    -- Show license
@@ -55,11 +62,11 @@ package Commands is
    procedure Show_License;
    -- ****
 
-   -- ****f* Commands/Show_Help
+   -- ****f* Commands/Show_Readme
    -- FUNCTION
-   -- Show the program help - list of available commands
+   -- Show readme.md
    -- SOURCE
-   procedure Show_Help;
+   procedure Show_Readme (Command_Name : String);
    -- ****
 
 end Commands;
