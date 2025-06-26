@@ -25,7 +25,7 @@ with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO; use Ada.Text_IO;
 
-with GNAT.Directory_Operations; use GNAT.Directory_Operations;
+with GNAT.Directory_Operations;
 with GNAT.Traceback.Symbolic;
 
 with AWS.Net;
@@ -42,6 +42,9 @@ is
 
    Version  : constant String := Yass_Config.Crate_Version;
    Released : constant String := "2024-08-23";
+
+   Dir_Separator : Character renames GNAT.Directory_Operations.Dir_Separator;
+
    --## rule off GLOBAL_REFERENCES
    Work_Directory : Unbounded_String := Null_Unbounded_String;
    --## rule on GLOBAL_REFERENCES
