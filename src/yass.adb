@@ -26,7 +26,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO; use Ada.Text_IO;
 
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
 
 with AWS.Net;
@@ -268,7 +267,7 @@ exception
            (File => Error_File,
             Item => "-------------------------------------------------");
 
-         if Directory_Separator = '/' then
+         if Dir_Separator = '/' then
             Put_Line
               (File => Error_File,
                Item => Symbolic_Traceback (E => An_Exception));
