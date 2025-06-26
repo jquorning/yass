@@ -15,7 +15,17 @@
 --    You should have received a copy of the GNU General Public License
 --    along with YASS.  If not, see <http://www.gnu.org/licenses/>.
 
+with Ada.Directories;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
+
+with GNAT.Directory_Operations;
+
+with Config;
+with Layouts;
+with Pages;
+
+--  with Messages;
 
 -- ****h* Yass/Commands
 -- FUNCTION
@@ -24,7 +34,59 @@ with Ada.Text_IO;
 package body Commands is
 -- ****
 
+   use Ada.Strings.Unbounded;
    use Ada.Text_IO;
+
+   ------------
+   -- Create --
+   ------------
+
+   procedure Create (Is_Create      : Boolean;
+                     Work_Directory : String)
+   is
+      use Ada.Directories;
+
+      Dir_Separator : Character renames GNAT.Directory_Operations.Dir_Separator;
+   begin
+      Create_Directories_Block :
+      declare
+         Paths: constant array(1 .. 6) of Unbounded_String :=
+           (1 => To_Unbounded_String (Source => "_layouts"),
+            2 => To_Unbounded_String (Source => "_output"),
+            3 =>
+              To_Unbounded_String
+                (Source => "_modules" & Dir_Separator & "start"),
+            4 =>
+              To_Unbounded_String
+                (Source => "_modules" & Dir_Separator & "pre"),
+            5 =>
+              To_Unbounded_String
+                (Source => "_modules" & Dir_Separator & "post"),
+            6 =>
+              To_Unbounded_String
+                (Source => "_modules" & Dir_Separator & "end"));
+      begin
+         Create_Directories_Loop :
+         for Directory of Paths loop
+            Create_Path
+              (New_Directory =>
+                 Work_Directory & Dir_Separator &
+                 To_String (Source => Directory));
+         end loop Create_Directories_Loop;
+      end Create_Directories_Block;
+
+      if Is_Create then
+         Config.Create_Interactive_Config (Directory_Name => Work_Directory);
+      else
+         Config.Create_Config (Directory_Name => Work_Directory);
+      end if;
+
+      Layouts.Create_Layout (Directory_Name => Work_Directory);
+
+      Layouts.Create_Directory_Layout (Directory_Name => Work_Directory);
+
+      Pages.Create_Empty_File (File_Name => Work_Directory);
+   end Create;
 
    ---------------
    -- Show_Help --

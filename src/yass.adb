@@ -208,56 +208,6 @@ procedure Yass is
       return True;
    end Valid_Arguments;
 
-   procedure Create is
-   begin
-      if not Valid_Arguments
-          (Message => "where new page will be created.", Exist => True) then
-         return;
-      end if;
-      Create_Directories_Block :
-      declare
-         Paths: constant array(1 .. 6) of Unbounded_String :=
-           (1 => To_Unbounded_String(Source => "_layouts"),
-            2 => To_Unbounded_String(Source => "_output"),
-            3 =>
-              To_Unbounded_String
-                (Source => "_modules" & Dir_Separator & "start"),
-            4 =>
-              To_Unbounded_String
-                (Source => "_modules" & Dir_Separator & "pre"),
-            5 =>
-              To_Unbounded_String
-                (Source => "_modules" & Dir_Separator & "post"),
-            6 =>
-              To_Unbounded_String
-                (Source => "_modules" & Dir_Separator & "end"));
-      begin
-         Create_Directories_Loop :
-         for Directory of Paths loop
-            Create_Path
-              (New_Directory =>
-                 To_String(Source => Work_Directory) & Dir_Separator &
-                 To_String(Source => Directory));
-         end loop Create_Directories_Loop;
-      end Create_Directories_Block;
-      if Argument(Number => 1) = "create" then
-         Create_Interactive_Config
-           (Directory_Name => To_String(Source => Work_Directory));
-      else
-         Create_Config(Directory_Name => To_String(Source => Work_Directory));
-      end if;
-      Create_Layout(Directory_Name => To_String(Source => Work_Directory));
-      Create_Directory_Layout
-        (Directory_Name => To_String(Source => Work_Directory));
-      Create_Empty_File(File_Name => To_String(Source => Work_Directory));
-      Show_Message
-        (Text =>
-           "New page in directory """ & Argument(Number => 2) &
-           """ was created. Edit """ & Argument(Number => 2) & Dir_Separator &
-           "site.cfg"" file to set data for your new site.",
-         Message_Type => Messages.SUCCESS);
-   end Create;
-
 begin
    if Ada.Environment_Variables.Exists(Name => "YASSDIR") then
       Set_Directory(Directory => Value(Name => "YASSDIR"));
@@ -324,9 +274,25 @@ begin
          end loop Show_Readme_Loop;
          Close(File => Readme_File);
       end Show_Readme_Block;
-      -- Create new, selected site project directory
+
+   --  Create new, selected site project directory
    elsif Argument(Number => 1) in "createnow" | "create" then
-      Create;
+      if not Valid_Arguments
+          (Message => "where new page will be created.", Exist => True) then
+         return;
+      end if;
+
+      Commands.Create
+        (Is_Create      => Argument (Number => 1) = "create",
+         Work_Directory => To_String (Work_Directory));
+
+      Messages.Show_Message
+        (Text =>
+           "New page in directory """ & Argument(Number => 2) &
+           """ was created. Edit """ & Argument(Number => 2) & Dir_Separator &
+           "site.cfg"" file to set data for your new site.",
+         Message_Type => Messages.SUCCESS);
+
    elsif Argument(Number => 1) = "build" then
       if not Valid_Arguments
           (Message => "from where page will be created.", Exist => False) then

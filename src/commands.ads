@@ -22,6 +22,17 @@
 package Commands is
 -- ****
 
+   -- ****f* Commands/Create
+   -- FUNCTION
+   -- Create
+   -- ARGUMENTS
+   -- Is_Create - True: 'create' command, False: 'createnow' command
+   -- Work_Directory - Work directory
+   -- SOURCE
+   procedure Create (Is_Create      : Boolean;
+                     Work_Directory : String);
+   -- ****
+
    -- ****f* Commands/Show_Help
    -- FUNCTION
    -- Show the program help - list of available commands
