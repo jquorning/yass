@@ -17,7 +17,6 @@
 
 with Ada.Directories;
 with Ada.Environment_Variables;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Directory_Operations;
@@ -233,6 +232,51 @@ package body Commands is
 
       Pages.Create_Empty_File (File_Name => Work_Directory);
    end Create;
+
+   -----------------
+   -- Create_File --
+   -----------------
+
+   procedure Create_File (Work_Directory : in out Unbounded_String;
+                          File_Name      :        String)
+   is
+      use Ada.Directories;
+   begin
+      if
+        Index
+          (Source  => To_Unbounded_String (File_Name),
+           Pattern => Containing_Directory (Name => Current_Directory)) = 1
+      then
+         Work_Directory := To_Unbounded_String (File_Name);
+      else
+         Work_Directory :=
+           To_Unbounded_String
+             (Source =>
+                Current_Directory & Dir_Separator & File_Name);
+      end if;
+
+      if Extension (Name => To_String (Work_Directory)) /= "md" then
+         Work_Directory := Work_Directory & ".md";
+      end if;
+
+      declare
+         Work_Directory_S : String renames To_String (Work_Directory);
+      begin
+         if Ada.Directories.Exists (Name => Work_Directory_S) then
+            Put_Line
+              (Item =>
+                 "Can't create file """ & Work_Directory_S &
+                 """. File with that name exists.");
+            return;
+         end if;
+
+         Create_Path
+           (New_Directory =>
+              Containing_Directory (Name => Work_Directory_S));
+
+         Pages.Create_Empty_File (File_Name => Work_Directory_S);
+      end;
+   end Create_File;
 
    --------------------
    -- Server_Command --

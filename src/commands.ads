@@ -15,6 +15,8 @@
 --    You should have received a copy of the GNU General Public License
 --    along with YASS.  If not, see <http://www.gnu.org/licenses/>.
 
+with Ada.Strings.Unbounded;
+
 -- ****h* Yass/Commands
 -- FUNCTION
 -- Yass commands
@@ -46,6 +48,18 @@ package Commands is
    -- SOURCE
    procedure Create (Is_Create      : Boolean;
                      Work_Directory : String);
+   -- ****
+
+   -- ****f* Commands/Create_File
+   -- FUNCTION
+   -- Createfile
+   -- PARAMETERS
+   -- Work_Directory - Work directory
+   -- File_Name - Name of md file
+   -- SOURCE
+   procedure Create_File
+      (Work_Directory : in out Ada.Strings.Unbounded.Unbounded_String;
+       File_Name      :        String);
    -- ****
 
    -- ****f* Commands/Server_Command

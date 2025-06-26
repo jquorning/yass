@@ -34,7 +34,6 @@ with AWS.Net;
 with Commands;
 with Config; use Config;
 with Messages; use Messages;
-with Pages; use Pages;
 
 procedure Yass is
    Version: constant String := "3.1.0";
@@ -177,39 +176,16 @@ begin
          Show_Message(Text => "Please specify name of file to create.");
          return;
       end if;
-      if Index
-          (Source => Argument(Number => 2),
-           Pattern => Containing_Directory(Name => Current_Directory)) =
-        1 then
-         Work_Directory :=
-           To_Unbounded_String(Source => Argument(Number => 2));
-      else
-         Work_Directory :=
-           To_Unbounded_String
-             (Source =>
-                Current_Directory & Dir_Separator & Argument(Number => 2));
-      end if;
-      if Extension(Name => To_String(Source => Work_Directory)) /= "md" then
-         Work_Directory :=
-           Work_Directory & To_Unbounded_String(Source => ".md");
-      end if;
-      if Ada.Directories.Exists
-          (Name => To_String(Source => Work_Directory)) then
-         Put_Line
-           (Item =>
-              "Can't create file """ & To_String(Source => Work_Directory) &
-              """. File with that name exists.");
-         return;
-      end if;
-      Create_Path
-        (New_Directory =>
-           Containing_Directory(Name => To_String(Source => Work_Directory)));
-      Create_Empty_File(File_Name => To_String(Source => Work_Directory));
+
+      Commands.Create_File (Work_Directory => Work_Directory,
+                            File_Name      => Argument (2));
+
       Show_Message
         (Text =>
-           "Empty file """ & To_String(Source => Work_Directory) &
+           "Empty file """ & To_String (Source => Work_Directory) &
            """ was created.",
          Message_Type => Messages.SUCCESS);
+
       -- Unknown command entered
    else
       Show_Message(Text => "Unknown command '" & Argument(Number => 1) & "'");
