@@ -48,6 +48,15 @@ package Commands is
                      Work_Directory : String);
    -- ****
 
+   -- ****f* Commands/Server_Command
+   -- FUNCTION
+   -- Start server to monitor changes in selected site project
+   -- PARAMETERS
+   -- Work_Directory - Work directory
+   -- SOURCE
+   procedure Server_Command (Work_Directory : String);
+   -- ****
+
    -- ****f* Commands/Show_Help
    -- FUNCTION
    -- Show the program help - list of available commands

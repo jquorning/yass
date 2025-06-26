@@ -30,14 +30,11 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
 
 with AWS.Net;
-with AWS.Server;
 
 with Commands;
 with Config; use Config;
-with Layouts; use Layouts;
 with Messages; use Messages;
 with Pages; use Pages;
-with Server; use Server;
 
 procedure Yass is
    Version: constant String := "3.1.0";
@@ -162,67 +159,18 @@ begin
       else
          Show_Message(Text => "Site building has been interrupted.");
       end if;
-      -- Start server to monitor changes in selected site project
-   elsif Argument(Number => 1) = "server" then
+
+   --  Start server to monitor changes in selected site project
+   elsif Argument (Number => 1) = "server" then
       if not Valid_Arguments
           (Message => "from where site will be served.", Exist => False) then
          return;
       end if;
-      Parse_Config(Directory_Name => To_String(Source => Work_Directory));
-      if not Ada.Directories.Exists
-          (Name => To_String(Source => Yass_Config.Output_Directory)) then
-         Create_Path
-           (New_Directory =>
-              To_String(Source => Yass_Config.Output_Directory));
-      end if;
-      Set_Directory
-        (Directory => To_String(Source => Yass_Config.Output_Directory));
-      if Yass_Config.Server_Enabled then
-         if not Ada.Directories.Exists
-             (Name =>
-                To_String(Source => Yass_Config.Layouts_Directory) &
-                Dir_Separator & "directory.html") then
-            Create_Directory_Layout(Directory_Name => "");
-         end if;
-         Start_Server;
-         if Yass_Config.Browser_Command /=
-           To_Unbounded_String(Source => "none") then
-            Start_Web_Browser_Block :
-            declare
-               Args: constant Argument_List_Access :=
-                 Argument_String_To_List
-                   (Arg_String =>
-                      To_String(Source => Yass_Config.Browser_Command));
-            begin
-               if not Ada.Directories.Exists(Name => Args(Args'First).all)
-                 or else
-                   Non_Blocking_Spawn
-                     (Program_Name => Args(Args'First).all,
-                      Args => Args(Args'First + 1 .. Args'Last)) =
-                   Invalid_Pid then
-                  Put_Line
-                    (Item =>
-                       "Can't start web browser. Please check your site configuration did it have proper value for ""BrowserCommand"" setting.");
-                  Shutdown_Server;
-                  return;
-               end if;
-            end Start_Web_Browser_Block;
-         end if;
-      else
-         Put_Line
-           (Item => "Started monitoring site changes. Press ""Q"" for quit.");
-      end if;
-      Monitor_Site.Start;
-      Monitor_Config.Start;
-      AWS.Server.Wait(Mode => AWS.Server.Q_Key_Pressed);
-      if Yass_Config.Server_Enabled then
-         Shutdown_Server;
-      else
-         Put(Item => "Stopping monitoring site changes...");
-      end if;
-      abort Monitor_Site;
-      abort Monitor_Config;
-      Show_Message(Text => "done.", Message_Type => Messages.SUCCESS);
+
+      Commands.Server_Command (Work_Directory => To_String (Work_Directory));
+
+      Show_Message (Text => "done.", Message_Type => Messages.SUCCESS);
+
       -- Create new empty markdown file with selected name
    elsif Argument(Number => 1) = "createfile" then
       if Argument_Count < 2 then

@@ -21,12 +21,16 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Directory_Operations;
+with GNAT.OS_Lib;
+
+with AWS.Server;
 
 with AtomFeed;
 with Config;
 with Layouts;
 with Messages;
 with Modules;
+with Server;
 with Sitemaps;
 with Pages;
 
@@ -229,6 +233,87 @@ package body Commands is
 
       Pages.Create_Empty_File (File_Name => Work_Directory);
    end Create;
+
+   --------------------
+   -- Server_Command --
+   --------------------
+
+   procedure Server_Command (Work_Directory : String)
+   is
+      use Ada.Directories;
+      use Config;
+      use Server;
+   begin
+      Parse_Config (Directory_Name => Work_Directory);
+
+      if not Ada.Directories.Exists
+          (Name => To_String (Source => Yass_Config.Output_Directory)) then
+         Create_Path
+           (New_Directory =>
+              To_String (Source => Yass_Config.Output_Directory));
+      end if;
+
+      Set_Directory
+        (Directory => To_String (Source => Yass_Config.Output_Directory));
+
+      if Yass_Config.Server_Enabled then
+         if not Ada.Directories.Exists
+             (Name =>
+                To_String (Source => Yass_Config.Layouts_Directory) &
+                Dir_Separator & "directory.html")
+         then
+            Layouts.Create_Directory_Layout (Directory_Name => "");
+         end if;
+
+         Start_Server;
+
+         if Yass_Config.Browser_Command /=
+           To_Unbounded_String (Source => "none") then
+
+            Start_Web_Browser_Block :
+            declare
+               use GNAT.OS_Lib;
+
+               Args : constant Argument_List_Access :=
+                 Argument_String_To_List
+                   (Arg_String =>
+                      To_String (Source => Yass_Config.Browser_Command));
+            begin
+               if not Ada.Directories.Exists (Name => Args(Args'First).all)
+                 or else
+                   Non_Blocking_Spawn
+                     (Program_Name => Args(Args'First).all,
+                      Args => Args(Args'First + 1 .. Args'Last)) =
+                   Invalid_Pid
+               then
+                  Put_Line
+                    (Item =>
+                       "Can't start web browser. Please check your site configuration did it have proper value for ""BrowserCommand"" setting.");
+                  Shutdown_Server;
+                  return;
+               end if;
+            end Start_Web_Browser_Block;
+         end if;
+
+      else
+         Put_Line
+           (Item => "Started monitoring site changes. Press ""Q"" for quit.");
+      end if;
+
+      Monitor_Site.Start;
+      Monitor_Config.Start;
+
+      AWS.Server.Wait (Mode => AWS.Server.Q_Key_Pressed);
+
+      if Yass_Config.Server_Enabled then
+         Shutdown_Server;
+      else
+         Put (Item => "Stopping monitoring site changes...");
+      end if;
+
+      abort Monitor_Site;
+      abort Monitor_Config;
+   end Server_Command;
 
    ------------------
    -- Show_License --
