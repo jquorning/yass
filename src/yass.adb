@@ -17,13 +17,13 @@
 
 with Ada.Calendar;
 with Ada.Calendar.Formatting;
-with Ada.Command_Line; use Ada.Command_Line;
-with Ada.Directories; use Ada.Directories;
-with Ada.Environment_Variables; use Ada.Environment_Variables;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Command_Line;
+with Ada.Directories;
+with Ada.Environment_Variables;
+with Ada.Exceptions;
+with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
 with GNAT.Directory_Operations;
 with GNAT.Traceback.Symbolic;
@@ -38,6 +38,11 @@ with Messages;
 
 procedure Yass
 is
+   use Ada.Command_Line;
+   use Ada.Exceptions;
+   use Ada.Strings.Unbounded;
+   use Ada.Text_IO;
+
    use Messages;
 
    Version  : constant String := Yass_Config.Crate_Version;
@@ -73,6 +78,7 @@ is
    function Valid_Arguments
      (Message : String; Exist : Boolean) return Boolean
    is
+      use Ada.Directories;
    begin
       --  User does not entered name of the site project directory
       if Argument_Count < 2 then
@@ -82,7 +88,7 @@ is
 
       --  Assign Work_Directory
       if
-        Index
+        Ada.Strings.Fixed.Index
           (Source  => Argument (Number => 2),
            Pattern => Containing_Directory (Name => Current_Directory)) = 1
       then
@@ -133,7 +139,8 @@ is
 
 begin
    if Ada.Environment_Variables.Exists (Name => "YASSDIR") then
-      Set_Directory (Directory => Value (Name => "YASSDIR"));
+      Ada.Directories.Set_Directory
+         (Directory => Ada.Environment_Variables.Value (Name => "YASSDIR"));
    end if;
 
    --  No arguments or help: show available commands
