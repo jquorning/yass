@@ -33,9 +33,12 @@ with AWS.Net;
 
 with Commands;
 with Config; use Config;
-with Messages; use Messages;
+with Messages;
 
-procedure Yass is
+procedure Yass
+is
+   use Messages;
+
    Version: constant String := "3.1.0";
    Released : constant String := "2024-08-23";
    --## rule off GLOBAL_REFERENCES
