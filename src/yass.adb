@@ -31,6 +31,8 @@ with GNAT.Traceback.Symbolic;
 
 with AWS.Net;
 
+with Yass_Config;
+
 with Commands;
 with Config;
 with Messages;
@@ -39,7 +41,7 @@ procedure Yass
 is
    use Messages;
 
-   Version  : constant String := "3.1.0";
+   Version  : constant String := Yass_Config.Crate_Version;
    Released : constant String := "2024-08-23";
    --## rule off GLOBAL_REFERENCES
    Work_Directory : Unbounded_String := Null_Unbounded_String;
@@ -285,7 +287,7 @@ exception
          Put_Line
            (Item =>
               "Oops, something bad happen and program crashed. Please, remember " &
-	      "what you done before crash and report this problem at " &
+              "what you done before crash and report this problem at " &
               "https://github.com/yet-another-static-site-generator/yass and " &
               "attach (if possible) file 'error.log' (should be in this same " &
               "directory).");
