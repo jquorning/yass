@@ -22,6 +22,21 @@
 package Commands is
 -- ****
 
+   -- ****if* Command/Build_Site
+   -- FUNCTION
+   -- Build the site from directory
+   -- PARAMETERS
+   -- Directory_Name - full path to the site directory
+   -- Success - Success of operation
+   -- RESULT
+   -- Returns True if the site was build, otherwise False.
+   -- SOURCE
+   procedure Build_Site (Directory_Name : String;
+                         Success        : out Boolean)
+   with
+      Pre => Directory_Name'Length > 0;
+   -- ****
+
    -- ****f* Commands/Create
    -- FUNCTION
    -- Create

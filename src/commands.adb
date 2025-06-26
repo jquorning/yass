@@ -16,13 +16,17 @@
 --    along with YASS.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Directories;
+with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Directory_Operations;
 
+with AtomFeed;
 with Config;
 with Layouts;
+with Modules;
+with Sitemaps;
 with Pages;
 
 --  with Messages;
@@ -36,6 +40,143 @@ package body Commands is
 
    use Ada.Strings.Unbounded;
    use Ada.Text_IO;
+
+   ----------------
+   -- Build_Site --
+   ----------------
+
+   procedure Build_Site (Directory_Name : String;
+                         Success        : out Boolean)
+   is
+      use Ada.Directories;
+
+      use AtomFeed;
+      use Config;
+      use Modules;
+      use Sitemaps;
+
+      Page_Tags       : Tags_Container.Map := Tags_Container.Empty_Map;
+      Page_Table_Tags : TableTags_Container.Map :=
+        TableTags_Container.Empty_Map;
+
+      procedure Build (Name : String)
+      with
+         Pre => Name'Length > 0;
+      --  Build the site from directory with full path Name
+
+      -----------
+      -- Build --
+      -----------
+
+      procedure Build (Name : String)
+      is
+         procedure Process_Directories (Item : Directory_Entry_Type);
+         --  Go recursive with directory with full path Item.
+
+         -------------------
+         -- Process_Files --
+         -------------------
+
+         procedure Process_Files (Item : Directory_Entry_Type);
+         --  Process file with full path Item: create html pages from markdown
+         --  files or copy any other file.
+
+         procedure Process_Files (Item : Directory_Entry_Type)
+         is
+            Simple_Nam : String renames Simple_Name (Directory_Entry => Item);
+            Full_Nam   : String renames Full_Name   (Directory_Entry => Item);
+         begin
+            if
+              Yass_Config.Excluded_Files.Find_Index
+                (Item => Simple_Nam) /=
+              Excluded_Container.No_Index or
+              not Ada.Directories.Exists (Name => Full_Nam)
+            then
+               return;
+            end if;
+
+            Ada.Environment_Variables.Set
+              (Name  => "YASSFILE",
+               Value => Full_Nam);
+
+            if Extension (Name => Simple_Nam) = "md" then
+               Pages.Create_Page
+                 (File_Name => Full_Nam,
+                  Directory => Name);
+            else
+               Pages.Copy_File
+                 (File_Name => Full_Nam,
+                  Directory => Name);
+            end if;
+         end Process_Files;
+
+         -------------------------
+         -- Process_Directories --
+         -------------------------
+
+         procedure Process_Directories (Item : Directory_Entry_Type) is
+         begin
+            if Yass_Config.Excluded_Files.Find_Index
+                (Item => Simple_Name (Directory_Entry => Item)) =
+              Excluded_Container.No_Index and
+              Ada.Directories.Exists
+                (Name => Full_Name(Directory_Entry => Item)) then
+               Build (Name => Full_Name(Directory_Entry => Item));
+            end if;
+         exception
+            when Ada.Directories.Name_Error =>
+               null;
+         end Process_Directories;
+
+      begin
+         Search
+           (Directory => Name, Pattern => "",
+            Filter => (Directory => False, others => True),
+            Process => Process_Files'Access);
+
+         Search
+           (Directory => Name, Pattern => "",
+            Filter => (Directory => True, others => False),
+            Process => Process_Directories'Access);
+      end Build;
+
+   begin
+      --  Load the program modules with 'start' hook
+      Load_Modules
+        (State           => "start",
+         Page_Tags       => Page_Tags,
+         Page_Table_Tags => Page_Table_Tags);
+
+      --  Load data from exisiting sitemap or create new set of data or
+      --  nothing if sitemap generation is disabled
+      Start_Sitemap;
+
+      --  Load data from existing atom feed or create new set of data or
+      --  nothing if atom feed generation is disabled
+      Start_Atom_Feed;
+
+      --  Build the site
+      Build (Name => Directory_Name);
+
+      --  Save atom feed to file or nothing if atom feed generation is disabled
+      Save_Atom_Feed;
+
+      --  Save sitemap to file or nothing if sitemap generation is disabled
+      Save_Sitemap;
+
+      -- Load the program modules with 'end' hook
+      Load_Modules
+        (State           => "end",
+         Page_Tags       => Page_Tags,
+         Page_Table_Tags => Page_Table_Tags);
+
+      Success := True;
+
+   exception
+      when Pages.Generate_Site_Exception =>
+         Success := False;
+
+   end Build_Site;
 
    ------------
    -- Create --

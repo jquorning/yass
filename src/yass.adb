@@ -32,14 +32,11 @@ with GNAT.Traceback.Symbolic;
 with AWS.Net;
 with AWS.Server;
 
-with AtomFeed;
 with Commands;
 with Config; use Config;
 with Layouts; use Layouts;
 with Messages; use Messages;
-with Modules;
 with Pages; use Pages;
-with Sitemaps;
 with Server; use Server;
 
 procedure Yass is
@@ -48,102 +45,7 @@ procedure Yass is
    --## rule off GLOBAL_REFERENCES
    Work_Directory: Unbounded_String := Null_Unbounded_String;
    --## rule on GLOBAL_REFERENCES
-
-   -- ****if* YASS/YASS.Build_Site
-   -- FUNCTION
-   -- Build the site from directory
-   -- PARAMETERS
-   -- Directory_Name - full path to the site directory
-   -- RESULT
-   -- Returns True if the site was build, otherwise False.
-   -- SOURCE
-   function Build_Site(Directory_Name: String) return Boolean with
-      Pre => Directory_Name'Length > 0
-   is
-      -- ****
-      use AtomFeed;
-      use Modules;
-      use Sitemaps;
-
-      Page_Tags: Tags_Container.Map := Tags_Container.Empty_Map;
-      Page_Table_Tags: TableTags_Container.Map :=
-        TableTags_Container.Empty_Map;
-      -- Build the site from directory with full path Name
-      procedure Build(Name: String) with
-         Pre => Name'Length > 0
-      is
-         -- Process file with full path Item: create html pages from markdown files or copy any other file.
-         procedure Process_Files(Item: Directory_Entry_Type) is
-         begin
-            if Yass_Config.Excluded_Files.Find_Index
-                (Item => Simple_Name(Directory_Entry => Item)) /=
-              Excluded_Container.No_Index or
-              not Ada.Directories.Exists
-                (Name => Full_Name(Directory_Entry => Item)) then
-               return;
-            end if;
-            Set
-              (Name => "YASSFILE",
-               Value => Full_Name(Directory_Entry => Item));
-            if Extension(Name => Simple_Name(Directory_Entry => Item)) =
-              "md" then
-               Create_Page
-                 (File_Name => Full_Name(Directory_Entry => Item),
-                  Directory => Name);
-            else
-               Copy_File
-                 (File_Name => Full_Name(Directory_Entry => Item),
-                  Directory => Name);
-            end if;
-         end Process_Files;
-         -- Go recursive with directory with full path Item.
-         procedure Process_Directories(Item: Directory_Entry_Type) is
-         begin
-            if Yass_Config.Excluded_Files.Find_Index
-                (Item => Simple_Name(Directory_Entry => Item)) =
-              Excluded_Container.No_Index and
-              Ada.Directories.Exists
-                (Name => Full_Name(Directory_Entry => Item)) then
-               Build(Name => Full_Name(Directory_Entry => Item));
-            end if;
-         exception
-            when Ada.Directories.Name_Error =>
-               null;
-         end Process_Directories;
-      begin
-         Search
-           (Directory => Name, Pattern => "",
-            Filter => (Directory => False, others => True),
-            Process => Process_Files'Access);
-         Search
-           (Directory => Name, Pattern => "",
-            Filter => (Directory => True, others => False),
-            Process => Process_Directories'Access);
-      end Build;
-   begin
-      -- Load the program modules with 'start' hook
-      Load_Modules
-        (State => "start", Page_Tags => Page_Tags,
-         Page_Table_Tags => Page_Table_Tags);
-      -- Load data from exisiting sitemap or create new set of data or nothing if sitemap generation is disabled
-      Start_Sitemap;
-      -- Load data from existing atom feed or create new set of data or nothing if atom feed generation is disabled
-      Start_Atom_Feed;
-      -- Build the site
-      Build(Name => Directory_Name);
-      -- Save atom feed to file or nothing if atom feed generation is disabled
-      Save_Atom_Feed;
-      -- Save sitemap to file or nothing if sitemap generation is disabled
-      Save_Sitemap;
-      -- Load the program modules with 'end' hook
-      Load_Modules
-        (State => "end", Page_Tags => Page_Tags,
-         Page_Table_Tags => Page_Table_Tags);
-      return True;
-   exception
-      when Generate_Site_Exception =>
-         return False;
-   end Build_Site;
+   Success : Boolean;
 
    -- ****if* YASS/YASS.Valid_Arguments
    -- FUNCTION
@@ -299,7 +201,9 @@ begin
          return;
       end if;
       Parse_Config(Directory_Name => To_String(Source => Work_Directory));
-      if Build_Site(Directory_Name => To_String(Source => Work_Directory)) then
+      Commands.Build_Site (Directory_Name => To_String(Source => Work_Directory),
+                           Success        => Success);
+      if Success then
          Show_Message
            (Text => "Site was build.", Message_Type => Messages.SUCCESS);
       else
