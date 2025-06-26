@@ -54,7 +54,12 @@ is
    Work_Directory : Unbounded_String := Null_Unbounded_String;
    --## rule on GLOBAL_REFERENCES
 
-   -- ****if* YASS/YASS.Valid_Arguments
+   -- *****f* YASS/YASS.Valid_Arguments
+   -- SOURCE
+   function Valid_Arguments
+     (Message: String; Exist: Boolean) return Boolean
+   with
+      Pre => Message'Length > 0;
    -- FUNCTION
    -- Validate arguments which user was entered when started the program and
    -- set Work_Directory for the program.
@@ -64,11 +69,6 @@ is
    -- Exist   - did selected directory should be test did it exist or not
    -- RESULT
    -- Returns True if entered arguments are valid, otherwise False.
-   -- SOURCE
-   function Valid_Arguments
-     (Message: String; Exist: Boolean) return Boolean
-   with
-      Pre => Message'Length > 0;
    -- ****
 
    ---------------------

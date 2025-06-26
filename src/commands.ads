@@ -18,13 +18,18 @@
 with Ada.Strings.Unbounded;
 
 -- ****h* Yass/Commands
--- FUNCTION
--- Yass commands
 -- SOURCE
 package Commands is
+-- FUNCTION
+-- Yass commands
 -- ****
 
-   -- ****if* Command/Build_Site
+   -- *****f* Command/Build_Site
+   -- SOURCE
+   procedure Build_Site (Directory_Name :     String;
+                         Success        : out Boolean)
+   with
+      Pre => Directory_Name'Length > 0;
    -- FUNCTION
    -- Build the site from directory
    -- PARAMETERS
@@ -32,64 +37,59 @@ package Commands is
    -- Success - Success of operation
    -- RESULT
    -- Returns True if the site was build, otherwise False.
-   -- SOURCE
-   procedure Build_Site (Directory_Name :     String;
-                         Success        : out Boolean)
-   with
-      Pre => Directory_Name'Length > 0;
    -- ****
 
    -- ****f* Commands/Create
-   -- FUNCTION
-   -- Create
-   -- ARGUMENTS
-   -- Is_Create - True: 'create' command, False: 'createnow' command
-   -- Work_Directory - Work directory
    -- SOURCE
    procedure Create (Is_Create      : Boolean;
                      Work_Directory : String);
+   -- FUNCTION
+   -- Create
+   -- PARAMETERS
+   -- Is_Create - True: 'create' command, False: 'createnow' command
+   -- Work_Directory - Work directory
    -- ****
 
    -- ****f* Commands/Create_File
+   -- SOURCE
+   procedure Create_File
+      (Work_Directory : in out Ada.Strings.Unbounded.Unbounded_String;
+       File_Name      :        String);
    -- FUNCTION
    -- Createfile
    -- PARAMETERS
    -- Work_Directory - Work directory
    -- File_Name - Name of md file
-   -- SOURCE
-   procedure Create_File
-      (Work_Directory : in out Ada.Strings.Unbounded.Unbounded_String;
-       File_Name      :        String);
    -- ****
 
    -- ****f* Commands/Server_Command
+   -- SOURCE
+   procedure Server_Command (Work_Directory : String);
    -- FUNCTION
    -- Start server to monitor changes in selected site project
    -- PARAMETERS
    -- Work_Directory - Work directory
-   -- SOURCE
-   procedure Server_Command (Work_Directory : String);
    -- ****
 
    -- ****f* Commands/Show_Help
-   -- FUNCTION
-   -- Show the program help - list of available commands
    -- SOURCE
    procedure Show_Help;
+   -- FUNCTION
+   -- Show the program help - list of available commands
    -- ****
 
    -- ****f* Commands/Show_License
-   -- FUNCTION
-   -- Show license
    -- SOURCE
    procedure Show_License;
+   -- FUNCTION
+   -- Show license
    -- ****
 
    -- ****f* Commands/Show_Readme
-   -- FUNCTION
-   -- Show readme.md
    -- SOURCE
    procedure Show_Readme (Command_Name : String);
+   -- FUNCTION
+   -- Show readme.md
    -- ****
 
 end Commands;
