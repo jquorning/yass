@@ -48,6 +48,13 @@ package Commands is
                      Work_Directory : String);
    -- ****
 
+   -- ****f* Commands/Show_License
+   -- FUNCTION
+   -- Show license
+   -- SOURCE
+   procedure Show_License;
+   -- ****
+
    -- ****f* Commands/Show_Help
    -- FUNCTION
    -- Show the program help - list of available commands

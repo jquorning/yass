@@ -229,6 +229,45 @@ package body Commands is
       Pages.Create_Empty_File (File_Name => Work_Directory);
    end Create;
 
+   ------------------
+   -- Show_License --
+   ------------------
+
+   procedure Show_License is
+   begin
+      Put_Line (Item => "Copyright (C) 2022-2024 A.J. Ianozi");
+      Put_Line (Item => "Copyright (C) 2019-2021 Bartek thindil Jasicki");
+      New_Line;
+      Put_Line
+        (Item =>
+           "This program is free software: you can redistribute it and/or modify");
+      Put_Line
+        (Item =>
+           "it under the terms of the GNU General Public License as published by");
+      Put_Line
+        (Item =>
+           "the Free Software Foundation, either version 3 of the License, or");
+      Put_Line (Item => "(at your option) any later version.");
+      New_Line;
+      Put_Line
+        (Item =>
+           "This program is distributed in the hope that it will be useful,");
+      Put_Line
+        (Item =>
+           "but WITHOUT ANY WARRANTY; without even the implied warranty of");
+      Put_Line
+        (Item =>
+           "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+      Put_Line (Item => "GNU General Public License for more details.");
+      New_Line;
+      Put_Line
+        (Item =>
+           "You should have received a copy of the GNU General Public License");
+      Put_Line
+        (Item =>
+           "along with this program.  If not, see <https://www.gnu.org/licenses/>.");
+   end Show_License;
+
    ---------------
    -- Show_Help --
    ---------------
