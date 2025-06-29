@@ -20,15 +20,21 @@ with Ada.Calendar.Formatting;
 with Ada.Calendar.Time_Zones;
 with Ada.Directories; use Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO; use Ada.Text_IO;
+
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 with GNAT.OS_Lib;
+
+with AWS.Config.Set;
 with AWS.Response;
 with AWS.Services.Page_Server;
 with AWS.Services.Directory;
+with AWS.Services.Dispatchers.URI;
 with AWS.Server;
 with AWS.Status;
+
 with AtomFeed;
 with Config; use Config;
 with Messages; use Messages;
@@ -294,37 +300,84 @@ package body Server is
       end select;
    end Monitor_Config;
 
-   function Callback(Request: AWS.Status.Data) return AWS.Response.Data is
-      use AWS.Services.Directory;
+   Dispatcher : AWS.Services.Dispatchers.URI.Handler;
 
-      Uri: constant String := AWS.Status.URI(D => Request);
+   ----------------------
+   -- Service_Redirect --
+   ----------------------
+
+   function Service_Redirect (Request : in AWS.Status.Data)
+                              return AWS.Response.Data
+   is
+      use Ada.Strings.Fixed;
+
+      Output_Directory  : String renames To_String (Yass_Config.Output_Directory);
+      Layouts_Directory : String renames To_String (Yass_Config.Layouts_Directory);
+
+      Match   : constant String  := ".html";
+      URI     : constant String  := AWS.Status.URI (Request);
+      New_URI : constant String  := Uri & Match;
    begin
-      -- Show directory listing if requested
-      if Kind
-          (Name => To_String(Source => Yass_Config.Output_Directory) & Uri) =
-        Directory then
+      Ada.Text_Io.Put_Line ("Redirect: " & Uri & " -> " & New_Uri);
+
+      --  Show directory listing if requested
+      if
+         Exists (Output_Directory & Uri) and then
+         Kind (Name => Output_Directory & Uri) = Directory
+      then
          return
            AWS.Response.Build
              (Content_Type => "text/html",
               Message_Body =>
-                Browse
-                  (Directory_Name =>
-                     To_String(Source => Yass_Config.Output_Directory) & Uri,
+                AWS.Services.Directory.Browse
+                  (Directory_Name    => Output_Directory & Uri,
                    Template_Filename =>
-                     To_String(Source => Yass_Config.Layouts_Directory) &
-                     Dir_Separator & "directory.html",
+                     Layouts_Directory & Dir_Separator & "directory.html",
                    Request => Request));
       end if;
-      -- Show selected page if requested
-      return AWS.Services.Page_Server.Callback(Request => Request);
-   end Callback;
 
-   procedure Start_Server is
+      return AWS.Response.URL (Location => New_URI);
+   end Service_Redirect;
+
+   ------------------
+   -- Service_File --
+   ------------------
+
+   function Service_File (Request : AWS.Status.Data)
+                          return AWS.Response.Data
+   is
+      Uri : constant String := AWS.Status.URI (D => Request);
    begin
+      Ada.Text_Io.Put_Line ("URI: " & Uri);
+
+      -- Show selected page if requested
+      return AWS.Services.Page_Server.Callback (Request => Request);
+   end Service_File;
+
+   procedure Start_Server
+   is
+      use GNAT;
+
+      use AWS.Config;
+      use AWS.Services.Dispatchers.URI;
+
+      Server_Conf : Object := Default_Config;
+   begin
+      Set.Server_Name    (Server_Conf, "YASS static page server");
+      Set.Max_Connection (Server_Conf, 5);
+      Set.Server_Port    (Server_Conf, Yass_Config.Server_Port);
+
+      Set.Cleaner_Wait_For_Client_Timeout (Server_Conf, 0.200);
+
+      Register_RegExp (Dispatcher, "/.*.\.html", Service_File'Access);
+      Register_RegExp (Dispatcher, "/.*.\..*",   Service_File'Access);
+      Register_RegExp (Dispatcher, "/.*",        Service_Redirect'Access);
+
       AWS.Server.Start
-        (Web_Server => Http_Server, Name => "YASS static page server",
-         Port => Yass_Config.Server_Port, Callback => Callback'Access,
-         Max_Connection => 5);
+        (Web_Server => Http_Server,
+         Dispatcher => Dispatcher,
+         Config     => Server_Conf);
+
       Put_Line
         (Item =>
            "Server was started. Web address: http://localhost:" &
