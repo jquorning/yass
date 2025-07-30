@@ -290,12 +290,11 @@ package body AtomFeed is
            Low    => Length (Yass_Conf.Output_Directory & Dir_Separator) + 1,
            High   => File_Name'Length);
 
-      Entry_Index   : Natural := 0;
       Local_Entries : FeedEntry_Container.Vector := Get_Entries_List;
    begin
       if
-        Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("none") or
-        (Yass_Conf.Atom_Feed_Source /= To_Unbounded_String ("tags") and then
+        Yass_Conf.Atom_Feed_Source = "none" or
+        (Yass_Conf.Atom_Feed_Source /= "tags" and then
            Index
              (Source  => File_Name,
               Pattern => To_String (Yass_Conf.Atom_Feed_Source),
@@ -331,29 +330,48 @@ package body AtomFeed is
             AtomEntry.Content := AtomEntry.Id;
          end if;
 
-         Delete_Entry_Loop :
-         for I in Local_Entries.First_Index .. Local_Entries.Last_Index loop
-            if Local_Entries (I).Entry_Title = AtomEntry.Entry_Title then
-               Local_Entries.Delete (Index => I);
-               exit Delete_Entry_Loop;
+         --  Delete old feed if exists.
+         declare
+            use FeedEntry_Container;
+
+            To_Delete : Cursor := No_Element;
+         begin
+            Delete_Entry_Loop :
+            for I in Local_Entries.Iterate loop
+               if Local_Entries (I).Entry_Title = AtomEntry.Entry_Title then
+                  To_Delete := I;
+                  exit Delete_Entry_Loop;
+               end if;
+            end loop Delete_Entry_Loop;
+
+            if To_Delete /= No_Element then
+               Local_Entries.Delete (To_Delete);
             end if;
-         end loop Delete_Entry_Loop;
+         end;
 
-         Entry_Index := Get_Entries_List.First_Index;
+         --  If AtomEntry is more recent than Local_Entries then insert.
+         declare
+            use FeedEntry_Container;
 
-         Move_Atom_Entries_Loop :
-         for I in Local_Entries.Iterate loop
-            if Local_Entries (I).Updated < AtomEntry.Updated then
-               Entry_Index := FeedEntry_Container.To_Index (Position => I);
-               Local_Entries.Insert (Before   => I,
+            To_Insert_Before : Cursor := No_Element;
+         begin
+            Move_Atom_Entries_Loop :
+            for I in Local_Entries.Iterate loop
+               if Local_Entries (I).Updated < AtomEntry.Updated then
+                  To_Insert_Before := I;
+                  exit Move_Atom_Entries_Loop;
+               end if;
+            end loop Move_Atom_Entries_Loop;
+
+            if To_Insert_Before /= No_Element then
+               Local_Entries.Insert (Before => To_Insert_Before,
                                      New_Item => AtomEntry);
-               exit Move_Atom_Entries_Loop;
             end if;
-         end loop Move_Atom_Entries_Loop;
 
-         if Entry_Index > Local_Entries.Last_Index then
-            Local_Entries.Append (New_Item => AtomEntry);
-         end if;
+--            if Entry_Index > Local_Entries.Last_Index then
+--               Local_Entries.Append (New_Item => AtomEntry);
+--            end if;
+         end;
 
       end loop Add_Page_To_Feed_Loop;
 
