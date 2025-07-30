@@ -15,7 +15,6 @@
 --    You should have received a copy of the GNU General Public License
 --    along with YASS.  If not, see <http://www.gnu.org/licenses/>.
 
-with Ada.Calendar;
 with Ada.Characters.Handling;
 with Ada.Characters.Latin_1;
 with Ada.Directories;
@@ -57,7 +56,6 @@ package body Pages is
 
       use AWS.Templates;
 
-      use AtomFeed;
       use Config;
 
       Layout           : Unbounded_String;
@@ -97,8 +95,7 @@ package body Pages is
       In_Sitemap : Boolean := True;
 
       --## rule off GLOBAL_REFERENCES
-      Atom_Entries : FeedEntry_Container.Vector :=
-        FeedEntry_Container.Empty_Vector;
+      Atom_Entry : AtomFeed.Feed_Entry;
       --## rule on GLOBAL_REFERENCES
 
       Sitemap_Invalid_Value : exception;
@@ -176,7 +173,7 @@ package body Pages is
          procedure Add_Tag (Name  : String;
                             Value : String)
          is
-            use Ada.Calendar;
+            Value_US : Unbounded_String renames To_Unbounded_String (Value);
          begin
             --  Create new composite template tag
             if Value = "[]" then
@@ -185,41 +182,28 @@ package body Pages is
                return;
             end if;
 
-            --  Add values to Atom feed entries for the page
+            --  Add values to Atom feed entry for the page
             if Name = "title" then
-               Atom_Entries.Prepend
-                 (New_Item =>
-                    (Entry_Title  => To_Unbounded_String (Value),
-                     Id           => Null_Unbounded_String,
-                     Updated      => Time_Of (Year => 1901, Month => 1, Day => 1),
-                     Author_Name  => Null_Unbounded_String,
-                     Author_Email => Null_Unbounded_String,
-                     Summary      => Null_Unbounded_String,
-                     Content      => Null_Unbounded_String));
+               Atom_Entry.Entry_Title := Value_US;
 
             elsif Name = "id" then
-               Atom_Entries (Atom_Entries.First_Index).Id :=
-                 To_Unbounded_String (Value);
+               Atom_Entry.Id := Value_US;
 
             elsif Name = "updated" then
-               Atom_Entries (Atom_Entries.First_Index).Updated :=
-                 To_Time (Date => Value);
+               Atom_Entry.Updated := AtomFeed.To_Time (Date => Value);
 
             elsif Name = "author" then
-               Atom_Entries (Atom_Entries.First_Index).Author_Name :=
-                 To_Unbounded_String (Value);
+               Atom_Entry.Author_Name := Value_US;
 
             elsif Name = "authoremail" then
-               Atom_Entries (Atom_Entries.First_Index).Author_Email :=
-                 To_Unbounded_String (Value);
+               Atom_Entry.Author_Email := Value_US;
 
             elsif Name = "summary" then
-               Atom_Entries (Atom_Entries.First_Index).Summary :=
-                 To_Unbounded_String (Value);
+               Atom_Entry.Summary := Value_US;
 
             elsif Name = "content" then
-               Atom_Entries (Atom_Entries.First_Index).Content :=
-                 To_Unbounded_String (Value);
+               Atom_Entry.Content := Value_US;
+
             end if;
 
             --  Add value for composite tag
@@ -491,12 +475,22 @@ package body Pages is
       end if;
 
       --  Add the page to the Atom feed
-      if Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("tags") then
-         Atom_Entries (Atom_Entries.First_Index).Content := Content;
+      if Yass_Conf.Atom_Feed_Source = "tags" then
+         Atom_Entry.Content := Content;
       end if;
 
-      Add_Page_To_Feed (File_Name => New_File_Name,
-                        Entries   => Atom_Entries);
+      declare
+         use AtomFeed;
+
+         Entries : FeedEntry_Container.Vector;
+      begin
+         if Atom_Entry.Entry_Title /= "" then
+            FeedEntry_Container.Append (Entries, Atom_Entry);
+         end if;
+
+         Add_Page_To_Feed (File_Name => New_File_Name,
+                           Entries   => Entries);
+      end;
 
       Ada.Environment_Variables.Set (Name  => "YASSFILE",
                                      Value => New_File_Name);
