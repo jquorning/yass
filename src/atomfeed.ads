@@ -118,7 +118,7 @@ package AtomFeed is
    -- SOURCE
    procedure Add_Page_To_Feed
      (File_Name : String;
-      Entries   : in out FeedEntry_Container.Vector)
+      Feed      : Feed_Entry)
    with
       Pre       => File_Name'Length > 0,
       Test_Case => (Name => "Test_Add_Page_To_Feed",

@@ -479,18 +479,10 @@ package body Pages is
          Atom_Entry.Content := Content;
       end if;
 
-      declare
-         use AtomFeed;
-
-         Entries : FeedEntry_Container.Vector;
-      begin
-         if Atom_Entry.Entry_Title /= "" then
-            FeedEntry_Container.Append (Entries, Atom_Entry);
-         end if;
-
-         Add_Page_To_Feed (File_Name => New_File_Name,
-                           Entries   => Entries);
-      end;
+      if Atom_Entry.Entry_Title /= "" then
+         AtomFeed.Add_Page_To_Feed (File_Name => New_File_Name,
+                                    Feed      => Atom_Entry);
+      end if;
 
       Ada.Environment_Variables.Set (Name  => "YASSFILE",
                                      Value => New_File_Name);
