@@ -170,8 +170,80 @@ package body Pages is
       Sitemap_Invalid_Value : exception;
       Invalid_Value         : exception;
 
+      procedure Add_Tag (Name : String; Value : String);
+      -- Add tag to the page template tags lists (simple or composite).
+      -- Name: name of the tag
+      -- Value: value of the tag
+
       procedure Insert_Tags (Tags_List : Tags_Container.Map);
       -- Insert selected list of tags Tags_List to templates
+
+      -------------
+      -- Add_Tag --
+      -------------
+
+      procedure Add_Tag (Name : String; Value : String) is
+         use Ada.Calendar;
+      begin
+         --  Create new composite template tag
+         if Value = "[]" then
+            Page_Table_Tags.Include (Key => Name, New_Item => +"");
+            Clear (T => Page_Table_Tags (Name));
+            return;
+         end if;
+
+         --  Add values to Atom feed entries for the page
+         if Name = "title" then
+            Atom_Entries.Prepend
+              (New_Item =>
+                 (Entry_Title  => To_Unbounded_String (Value),
+                  Id           => Null_Unbounded_String,
+                  Updated      => Time_Of (Year => 1901, Month => 1, Day => 1),
+                  Author_Name  => Null_Unbounded_String,
+                  Author_Email => Null_Unbounded_String,
+                  Summary      => Null_Unbounded_String,
+                  Content      => Null_Unbounded_String));
+
+         elsif Name = "id" then
+            Atom_Entries (Atom_Entries.First_Index).Id :=
+              To_Unbounded_String (Value);
+
+         elsif Name = "updated" then
+            Atom_Entries (Atom_Entries.First_Index).Updated :=
+              To_Time (Date => Value);
+
+         elsif Name = "author" then
+            Atom_Entries (Atom_Entries.First_Index).Author_Name :=
+              To_Unbounded_String (Value);
+
+         elsif Name = "authoremail" then
+            Atom_Entries (Atom_Entries.First_Index).Author_Email :=
+              To_Unbounded_String (Value);
+
+         elsif Name = "summary" then
+            Atom_Entries (Atom_Entries.First_Index).Summary :=
+              To_Unbounded_String (Value);
+
+         elsif Name = "content" then
+            Atom_Entries (Atom_Entries.First_Index).Content :=
+              To_Unbounded_String (Value);
+         end if;
+
+         --  Add value for composite tag
+         if Page_Table_Tags.Contains (Key => Name) then
+            Page_Table_Tags (Name) := Page_Table_Tags (Name) & Value;
+
+         --  Add value for simple tag
+
+         else
+            Page_Tags.Include (Key => Name, New_Item => Value);
+         end if;
+
+      exception
+         when Constraint_Error =>
+            raise Invalid_Value
+              with """" & Name & """ value """ & Value & """";
+      end Add_Tag;
 
       -----------------
       -- Insert_Tags --
@@ -222,80 +294,6 @@ package body Pages is
       Read_Page_File_Block :
       declare
          Valid_Value : Boolean := False;
-
-         procedure Add_Tag (Name : String; Value : String);
-         -- Add tag to the page template tags lists (simple or composite).
-         -- Name: name of the tag
-         -- Value: value of the tag
-
-         -------------
-         -- Add_Tag --
-         -------------
-
-         procedure Add_Tag (Name : String; Value : String) is
-            use Ada.Calendar;
-         begin
-            --  Create new composite template tag
-            if Value = "[]" then
-               Page_Table_Tags.Include (Key => Name, New_Item => +"");
-               Clear (T => Page_Table_Tags (Name));
-               return;
-            end if;
-
-            --  Add values to Atom feed entries for the page
-            if Name = "title" then
-               Atom_Entries.Prepend
-                 (New_Item =>
-                    (Entry_Title  => To_Unbounded_String (Value),
-                     Id           => Null_Unbounded_String,
-                     Updated      =>
-                       Time_Of (Year => 1901, Month => 1, Day => 1),
-                     Author_Name  => Null_Unbounded_String,
-                     Author_Email => Null_Unbounded_String,
-                     Summary      => Null_Unbounded_String,
-                     Content      => Null_Unbounded_String));
-
-            elsif Name = "id" then
-               Atom_Entries (Atom_Entries.First_Index).Id :=
-                 To_Unbounded_String (Value);
-
-            elsif Name = "updated" then
-               Atom_Entries (Atom_Entries.First_Index).Updated :=
-                 To_Time (Date => Value);
-
-            elsif Name = "author" then
-               Atom_Entries (Atom_Entries.First_Index).Author_Name :=
-                 To_Unbounded_String (Value);
-
-            elsif Name = "authoremail" then
-               Atom_Entries (Atom_Entries.First_Index).Author_Email :=
-                 To_Unbounded_String (Value);
-
-            elsif Name = "summary" then
-               Atom_Entries (Atom_Entries.First_Index).Summary :=
-                 To_Unbounded_String (Value);
-
-            elsif Name = "content" then
-               Atom_Entries (Atom_Entries.First_Index).Content :=
-                 To_Unbounded_String (Value);
-            end if;
-
-            --  Add value for composite tag
-            if Page_Table_Tags.Contains (Key => Name) then
-               Page_Table_Tags (Name) := Page_Table_Tags (Name) & Value;
-
-            --  Add value for simple tag
-
-            else
-               Page_Tags.Include (Key => Name, New_Item => Value);
-            end if;
-
-         exception
-            when Constraint_Error =>
-               raise Invalid_Value
-                 with """" & Name & """ value """ & Value & """";
-         end Add_Tag;
-
       begin
          --  Read selected markdown file
          Open (File => Page_File, Mode => In_File, Name => File_Name);
