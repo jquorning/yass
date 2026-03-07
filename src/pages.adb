@@ -54,26 +54,24 @@ package body Pages is
    function "-" (Item : UString) return String
    renames Ada.Strings.Unbounded.To_String;
 
+   type File_Part is (Initial, Preamble, Payload);
+
+   Preamble_Separator : constant String := "---";
+
    ------------------
    -- Get_Tag_Name --
    ------------------
 
    function Get_Tag_Name (Item : String) return String is
       use Ada.Strings;
-      use Config;
 
-      Comment : constant String := -Yass_Conf.Markdown_Comment & " ";
-      Comma   : constant Natural := Fixed.Index (Item, ":");
+      Comma : constant Natural := Fixed.Index (Item, ":");
    begin
-      if Item'Length < Comment'Length then
+      if Comma = 0 then
          return "";
       end if;
 
-      if Item (Comment'Range) = Comment and then Comma /= 0 then
-         return Fixed.Trim (Item (Comment'Last + 1 .. Comma - 1), Both);
-      end if;
-
-      return "";
+      return Fixed.Trim (Item (Item'First .. Comma - 1), Side => Both);
    end Get_Tag_Name;
 
    -------------------
@@ -306,6 +304,7 @@ package body Pages is
 
       procedure Read_Page (File_Name : String) is
          Page_File : File_Type;
+         Part      : File_Part := Initial;
       begin
          --  Read selected markdown file
          Open (File => Page_File, Mode => In_File, Name => File_Name);
@@ -313,46 +312,62 @@ package body Pages is
          Read_Page_File_Loop :
          while not End_Of_File (Page_File) loop
             declare
-               Line  : constant String := Get_Line (Page_File);
-               Data  : constant String := Encode (Line);
-               Name  : constant String := Get_Tag_Name (Data);
-               Value : constant String := Get_Tag_Value (Data);
+               Line : constant String := Get_Line (Page_File);
+               Data : constant String := Encode (Line);
             begin
-               if Name = "" then
-                  Append (Content, New_Item => Data);
-                  Append (Content, New_Item => Ada.Characters.Latin_1.LF);
+               case Part is
+                  when Initial  =>
+                     if Data = Preamble_Separator then
+                        Part := Preamble;
+                     end if;
 
-               --  Get the page template layout
-               elsif Name = "layout" then
-                  Layout :=
-                    Yass_Conf.Layouts_Directory
-                    & Dir_Separator
-                    & Value
-                    & ".html";
+                  when Preamble =>
+                     if Data = Preamble_Separator then
+                        Part := Payload;
+                     else
+                        declare
+                           Name  : constant String := Get_Tag_Name (Data);
+                           Value : constant String := Get_Tag_Value (Data);
+                        begin
+                           --  Get the page template layout
+                           if Name = "layout" then
+                              Layout :=
+                                Yass_Conf.Layouts_Directory
+                                & Dir_Separator
+                                & Value
+                                & ".html";
 
-               --  Set update frequency for the page in the sitemap
-               elsif Name = "changefreq" then
-                  Change_Frequency := +Value;
+                           --  Set update frequency for the page in the sitemap
+                           elsif Name = "changefreq" then
+                              Change_Frequency := +Value;
 
-               --  Set priority for the page in the sitemap
-               elsif Name = "priority" then
-                  Page_Priority := +Value;
+                           --  Set priority for the page in the sitemap
+                           elsif Name = "priority" then
+                              Page_Priority := +Value;
 
-                  if not Is_Priority_Value (Value) then
-                     raise Sitemap_Invalid_Value
-                       with "Invalid value for page priority";
-                  end if;
+                              if not Is_Priority_Value (Value) then
+                                 raise Sitemap_Invalid_Value
+                                   with "Invalid value for page priority";
+                              end if;
 
-               --  Check if the page is excluded from the sitemap
-               elsif Name = "insitemap" then
-                  if To_Lower (Value) = "false" then
-                     In_Sitemap := False;
-                  end if;
+                           --  Check if the page is excluded from the sitemap
+                           elsif Name = "insitemap" then
+                              if To_Lower (Value) = "false" then
+                                 In_Sitemap := False;
+                              end if;
 
-               --  Add tag to the page tags lists
-               else
-                  Add_Tag (Name => Name, Value => Value);
-               end if;
+                           --  Add tag to the page tags lists
+                           else
+                              Add_Tag (Name => Name, Value => Value);
+                           end if;
+                        end;
+                     end if;
+
+                  when Payload  =>
+                     Append (Content, Data);
+                     Append (Content, Ada.Characters.Latin_1.LF);
+
+               end case;
             end;
          end loop Read_Page_File_Loop;
 
@@ -411,8 +426,7 @@ package body Pages is
       declare
          HTML : constant String :=
            CMark.Markdown_To_HTML
-             (Text         => -Content,
-              HTML_Enabled => Yass_Conf.HTML_Enabled);
+             (Text => -Content, HTML_Enabled => Yass_Conf.HTML_Enabled);
       begin
          Page_Tags.Include ("Content", HTML);
       end;
@@ -491,8 +505,7 @@ package body Pages is
 
          Put
            (Page_File,
-            Decode
-              (Parse (Filename => -Layout, Translations => Tags)));
+            Decode (Parse (Filename => -Layout, Translations => Tags)));
 
          Close (Page_File);
       end;
@@ -617,9 +630,7 @@ package body Pages is
          Ada.Environment_Variables.Set
            (Name  => "YASSFILE",
             Value =>
-              Output_Directory
-              & Dir_Separator
-              & Simple_Name (File_Name));
+              Output_Directory & Dir_Separator & Simple_Name (File_Name));
       end if;
 
       --  Load the program modules with 'post' hook
@@ -757,6 +768,7 @@ package body Pages is
       use Config;
 
       Page_File : File_Type;
+      Part      : File_Part := Initial;
       Layout    : UString;
    begin
       Open (File => Page_File, Mode => In_File, Name => File_Name);
@@ -764,16 +776,37 @@ package body Pages is
       Find_Layout_Name_Loop :
       while not End_Of_File (Page_File) loop
          declare
-            Line  : constant String := Get_Line (Page_File);
-            Data  : constant String := Encode (Line);
-            Name  : constant String := Get_Tag_Name (Data);
-            Value : constant String := Get_Tag_Value (Data);
+            Line : constant String := Get_Line (Page_File);
+            Data : constant String := Encode (Line);
          begin
-            if Name = "layout" then
-               Layout :=
-                 Yass_Conf.Layouts_Directory & Dir_Separator & Value & ".html";
-               exit Find_Layout_Name_Loop;
-            end if;
+            case Part is
+               when Initial  =>
+                  if Data = Preamble_Separator then
+                     Part := Preamble;
+                  end if;
+
+               when Preamble =>
+                  if Data = Preamble_Separator then
+                     Part := Payload;
+                  else
+                     declare
+                        Name  : constant String := Get_Tag_Name (Data);
+                        Value : constant String := Get_Tag_Value (Data);
+                     begin
+                        if Name = "layout" then
+                           Layout :=
+                             Yass_Conf.Layouts_Directory
+                             & Dir_Separator
+                             & Value
+                             & ".html";
+                           exit Find_Layout_Name_Loop;
+                        end if;
+                     end;
+                  end if;
+
+               when Payload  =>
+                  exit Find_Layout_Name_Loop;
+            end case;
          end;
       end loop Find_Layout_Name_Loop;
 
