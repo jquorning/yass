@@ -404,12 +404,14 @@ package body Pages is
       Validate_Tags (File_Name);
 
       --  Convert markdown to HTML
-      Page_Tags.Include
-        (Key      => "Content",
-         New_Item =>
+      declare
+         HTML : constant String :=
            CMark.Markdown_To_HTML
              (Text         => To_String (Content),
-              HTML_Enabled => Yass_Conf.HTML_Enabled));
+              HTML_Enabled => Yass_Conf.HTML_Enabled);
+      begin
+         Page_Tags.Include ("Content", HTML);
+      end;
 
       --  Load the program modules with 'pre' hook
       Modules.Load_Modules
@@ -418,68 +420,54 @@ package body Pages is
          Page_Table_Tags => Page_Table_Tags);
 
       --  Insert tags to template
-      Insert
-        (Set  => Tags,
-         Item =>
-           Assoc (Variable => "Content", Value => Page_Tags ("Content")));
+      Insert (Tags, Assoc ("Content", Page_Tags ("Content")));
 
       Insert_Tags (Tags_List => Site_Tags);
 
+      --  Canonicallink
       if not Exists (Set => Tags, Variable => "canonicallink") then
-         Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => "canonicallink",
-                 Value    =>
-                   To_String (Yass_Conf.Base_Url)
-                   & "/"
-                   & Slice
-                       (Source => To_Unbounded_String (New_File_Name),
-                        Low    =>
-                          Length (Yass_Conf.Output_Directory & Dir_Separator)
-                          + 1,
-                        High   => New_File_Name'Length)));
+         declare
+            First : constant Natural :=
+              Length (Yass_Conf.Output_Directory & Dir_Separator) + 1;
+
+            Link_2 : constant String :=
+              New_File_Name (First .. New_File_Name'Last);
+
+            Link : constant String :=
+              To_String (Yass_Conf.Base_Url) & Dir_Separator & Link_2;
+         begin
+            Insert (Tags, Assoc ("canonicallink", Link));
+         end;
       end if;
 
-      if not Exists (Set => Tags, Variable => "author") then
-         Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => "author",
-                 Value    => To_String (Yass_Conf.Author_Name)));
+      --  Author
+      if not Exists (Tags, "author") then
+         Insert (Tags, Assoc ("author", To_String (Yass_Conf.Author_Name)));
       end if;
 
-      if not Exists (Set => Tags, Variable => "description")
-        and then Site_Tags.Contains (Key => "Description")
+      --  Description
+      if not Exists (Tags, "description")
+        and then Site_Tags.Contains ("Description")
       then
-         Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => "description",
-                 Value    => Site_Tags ("Description")));
+         Insert (Tags, Assoc ("description", Site_Tags ("Description")));
       end if;
 
       Add_Table_Tags_Loop :
       for I in Page_Table_Tags.Iterate loop
          Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => TableTags_Container.Key (Position => I),
-                 Value    => Page_Table_Tags (I)));
+           (Tags,
+            Assoc
+              (TableTags_Container.Key (Position => I), Page_Table_Tags (I)));
+
       end loop Add_Table_Tags_Loop;
 
       Add_Global_Table_Tags_Loop :
       for I in Global_Table_Tags.Iterate loop
          Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => TableTags_Container.Key (Position => I),
-                 Value    => Global_Table_Tags (I)));
+           (Tags,
+            Assoc
+              (TableTags_Container.Key (Position => I),
+               Global_Table_Tags (I)));
       end loop Add_Global_Table_Tags_Loop;
 
       Insert_Tags (Tags_List => Page_Tags);
@@ -498,12 +486,9 @@ package body Pages is
          end if;
 
          Put
-           (File => Page_File,
-            Item =>
-              Decode
-                (Item =>
-                   Parse
-                     (Filename => To_String (Layout), Translations => Tags)));
+           (Page_File,
+            Decode
+              (Parse (Filename => To_String (Layout), Translations => Tags)));
 
          Close (Page_File);
       end;
