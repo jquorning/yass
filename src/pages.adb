@@ -136,9 +136,9 @@ package body Pages is
       Content          : Unbounded_String;
       Change_Frequency : Unbounded_String;
       Page_Priority    : Unbounded_String;
+      In_Sitemap       : Boolean := True;
 
-      Tags : Translate_Set :=
-        Null_Set; --## rule line off GLOBAL_REFERENCES
+      Tags : Translate_Set := Null_Set; --## rule line off GLOBAL_REFERENCES
 
       Output_Directory : constant Unbounded_String :=
         Yass_Conf.Output_Directory
@@ -159,8 +159,6 @@ package body Pages is
         TableTags_Container.Empty_Map;
       --## rule on GLOBAL_REFERENCES
 
-      In_Sitemap : Boolean := True;
-
       --## rule off GLOBAL_REFERENCES
       Atom_Entries : FeedEntry_Container.Vector :=
         FeedEntry_Container.Empty_Vector;
@@ -178,6 +176,9 @@ package body Pages is
       -- Insert selected list of tags Tags_List to templates
 
       procedure Read_Page (File_Name : String);
+      --
+
+      procedure Validate_Tags (File_Name : String);
       --
 
       -------------
@@ -297,8 +298,7 @@ package body Pages is
       ---------------
 
       procedure Read_Page (File_Name : String) is
-         Page_File   : File_Type;
-         Valid_Value : Boolean := False;
+         Page_File : File_Type;
       begin
          --  Read selected markdown file
          Open (File => Page_File, Mode => In_File, Name => File_Name);
@@ -323,27 +323,9 @@ package body Pages is
                     & Value
                     & ".html";
 
-                  if not Ada.Directories.Exists (To_String (Layout)) then
-                     Close (Page_File);
-                     raise Layout_Not_Found
-                       with
-                         File_Name
-                         & """. Selected layout file """
-                         & To_String (Layout);
-                  end if;
-
                --  Set update frequency for the page in the sitemap
                elsif Name = "changefreq" then
                   Change_Frequency := To_Unbounded_String (Value);
-
-                  Valid_Value := Is_Frequency_Value (Value);
-
-                  if not Valid_Value then
-                     raise Sitemap_Invalid_Value
-                       with "Invalid value for changefreq";
-                  end if;
-
-                  Valid_Value := False;
 
                --  Set priority for the page in the sitemap
                elsif Name = "priority" then
@@ -371,8 +353,55 @@ package body Pages is
 
       end Read_Page;
 
+      -------------------
+      -- Validate_Tags --
+      -------------------
+
+      procedure Validate_Tags (File_Name : String) is
+      begin
+         -- Check layout
+         if Layout /= "" then
+            if not Ada.Directories.Exists (To_String (Layout)) then
+               raise Layout_Not_Found
+                 with
+                   File_Name
+                   & """. Selected layout file """
+                   & To_String (Layout);
+            end if;
+         end if;
+
+         -- Check frequency
+         if Change_Frequency /= "" then
+            declare
+               Valid_Value : constant Boolean :=
+                 Is_Frequency_Value (To_String (Change_Frequency));
+            begin
+               if not Valid_Value then
+                  raise Sitemap_Invalid_Value
+                    with "Invalid value for changefreq";
+               end if;
+            end;
+         end if;
+
+         -- Check priority
+         if Page_Priority /= "" then
+            declare
+               Valid_Priority : constant Boolean :=
+                 Is_Priority_Value (To_String (Page_Priority));
+            begin
+               if not Valid_Priority then
+                  raise Sitemap_Invalid_Value
+                    with "Invalid value for page priority";
+               end if;
+            end;
+         end if;
+
+      end Validate_Tags;
+
    begin
       Read_Page (File_Name);
+
+      Validate_Tags (File_Name);
 
       --  Convert markdown to HTML
       Page_Tags.Include
@@ -515,7 +544,7 @@ package body Pages is
       when An_Exception : Template_Error =>
          Put_Line (Item => Exception_Message (X => An_Exception));
          if Ada.Directories.Exists (Name => New_File_Name) then
---          Close (File => Page_File);
+            --          Close (File => Page_File);
             Delete_File (Name => New_File_Name);
          end if;
          raise Generate_Site_Exception;
