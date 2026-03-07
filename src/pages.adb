@@ -134,6 +134,7 @@ package body Pages is
       use Ada.Characters.Handling;
       use Ada.Exceptions;
       use Ada.Directories;
+      use Ada.Strings.Fixed;
       use Ada.Strings.Unbounded;
       use Ada.Text_IO;
 
@@ -150,15 +151,15 @@ package body Pages is
 
       Tags : Translate_Set := Null_Set; --## rule line off GLOBAL_REFERENCES
 
-      Output_Directory : constant UString :=
-        Yass_Conf.Output_Directory
+      Output_Directory : constant String :=
+        (-Yass_Conf.Output_Directory)
         & Delete
-            (Source  => +Directory,
+            (Source  => Directory,
              From    => 1,
              Through => Length (Site_Directory));
 
       New_File_Name : constant String :=
-        (-Output_Directory)
+        Output_Directory
         & Dir_Separator
         & Ada.Directories.Base_Name (Name => File_Name)
         & ".html";
@@ -476,7 +477,7 @@ package body Pages is
       Insert_Tags (Tags_List => Page_Tags);
 
       --  Create HTML file in Output_Directory
-      Create_Path (New_Directory => -Output_Directory);
+      Create_Path (New_Directory => Output_Directory);
 
       declare
          Page_File : File_Type;
@@ -563,14 +564,15 @@ package body Pages is
 
    procedure Copy_File (File_Name : String; Directory : String) is
       use Ada.Directories;
+      use Ada.Strings.Fixed;
       use Ada.Strings.Unbounded;
 
       use Config;
 
-      Output_Directory : constant UString :=
-        Yass_Conf.Output_Directory
+      Output_Directory : constant String :=
+        (-Yass_Conf.Output_Directory)
         & Delete
-            (Source  => +Directory,
+            (Source  => Directory,
              From    => 1,
              Through => Length (Site_Directory));
 
@@ -585,27 +587,27 @@ package body Pages is
          Page_Table_Tags => Page_Table_Tags);
 
       --  Copy the file to output directory
-      Create_Path (New_Directory => -Output_Directory);
+      Create_Path (New_Directory => Output_Directory);
 
       if Ada.Directories.Kind (Name => File_Name) = Ada.Directories.Directory
       then
          Create_Path
            (New_Directory =>
-              (-Output_Directory)
+              Output_Directory
               & Dir_Separator
               & Simple_Name (Name => File_Name));
       else
          Ada.Directories.Copy_File
            (Source_Name => File_Name,
             Target_Name =>
-              (-Output_Directory)
+              Output_Directory
               & Dir_Separator
               & Simple_Name (Name => File_Name));
 
          if Extension (Name => File_Name) = "html" then
             Sitemaps.Add_Page_To_Sitemap
               (File_Name        =>
-                 (-Output_Directory)
+                 Output_Directory
                  & Dir_Separator
                  & Simple_Name (Name => File_Name),
                Change_Frequency => "",
@@ -615,7 +617,7 @@ package body Pages is
          Ada.Environment_Variables.Set
            (Name  => "YASSFILE",
             Value =>
-              (-Output_Directory)
+              Output_Directory
               & Dir_Separator
               & Simple_Name (File_Name));
       end if;
