@@ -42,6 +42,18 @@ package body Pages is
 
    Dir_Separator : Character renames GNAT.Directory_Operations.Dir_Separator;
 
+   subtype UString is Ada.Strings.Unbounded.Unbounded_String;
+   use type UString;
+
+   Null_UString : constant UString :=
+     Ada.Strings.Unbounded.Null_Unbounded_String;
+
+   function "+" (Item : String) return UString
+   renames Ada.Strings.Unbounded.To_Unbounded_String;
+
+   function "-" (Item : UString) return String
+   renames Ada.Strings.Unbounded.To_String;
+
    ------------------
    -- Get_Tag_Name --
    ------------------
@@ -50,10 +62,8 @@ package body Pages is
       use Ada.Strings;
       use Config;
 
-      Comment : constant String :=
-        Unbounded.To_String (Yass_Conf.Markdown_Comment) & " ";
-
-      Comma : constant Natural := Fixed.Index (Item, ":");
+      Comment : constant String := -Yass_Conf.Markdown_Comment & " ";
+      Comma   : constant Natural := Fixed.Index (Item, ":");
    begin
       if Item'Length < Comment'Length then
          return "";
@@ -132,23 +142,23 @@ package body Pages is
       use AtomFeed;
       use Config;
 
-      Layout           : Unbounded_String;
-      Content          : Unbounded_String;
-      Change_Frequency : Unbounded_String;
-      Page_Priority    : Unbounded_String;
+      Layout           : UString;
+      Content          : UString;
+      Change_Frequency : UString;
+      Page_Priority    : UString;
       In_Sitemap       : Boolean := True;
 
       Tags : Translate_Set := Null_Set; --## rule line off GLOBAL_REFERENCES
 
-      Output_Directory : constant Unbounded_String :=
+      Output_Directory : constant UString :=
         Yass_Conf.Output_Directory
         & Delete
-            (Source  => To_Unbounded_String (Directory),
+            (Source  => +Directory,
              From    => 1,
              Through => Length (Site_Directory));
 
       New_File_Name : constant String :=
-        To_String (Output_Directory)
+        (-Output_Directory)
         & Dir_Separator
         & Ada.Directories.Base_Name (Name => File_Name)
         & ".html";
@@ -199,37 +209,33 @@ package body Pages is
          if Name = "title" then
             Atom_Entries.Prepend
               (New_Item =>
-                 (Entry_Title  => To_Unbounded_String (Value),
-                  Id           => Null_Unbounded_String,
+                 (Entry_Title  => +Value,
+                  Id           => Null_UString,
                   Updated      => Time_Of (Year => 1901, Month => 1, Day => 1),
-                  Author_Name  => Null_Unbounded_String,
-                  Author_Email => Null_Unbounded_String,
-                  Summary      => Null_Unbounded_String,
-                  Content      => Null_Unbounded_String));
+                  Author_Name  => Null_UString,
+                  Author_Email => Null_UString,
+                  Summary      => Null_UString,
+                  Content      => Null_UString));
 
          elsif Name = "id" then
-            Atom_Entries (Atom_Entries.First_Index).Id :=
-              To_Unbounded_String (Value);
+            Atom_Entries (Atom_Entries.First_Index).Id := +Value;
 
          elsif Name = "updated" then
             Atom_Entries (Atom_Entries.First_Index).Updated :=
               To_Time (Date => Value);
 
          elsif Name = "author" then
-            Atom_Entries (Atom_Entries.First_Index).Author_Name :=
-              To_Unbounded_String (Value);
+            Atom_Entries (Atom_Entries.First_Index).Author_Name := +Value;
 
          elsif Name = "authoremail" then
-            Atom_Entries (Atom_Entries.First_Index).Author_Email :=
-              To_Unbounded_String (Value);
+            Atom_Entries (Atom_Entries.First_Index).Author_Email := +Value;
 
          elsif Name = "summary" then
-            Atom_Entries (Atom_Entries.First_Index).Summary :=
-              To_Unbounded_String (Value);
+            Atom_Entries (Atom_Entries.First_Index).Summary := +Value;
 
          elsif Name = "content" then
-            Atom_Entries (Atom_Entries.First_Index).Content :=
-              To_Unbounded_String (Value);
+            Atom_Entries (Atom_Entries.First_Index).Content := +Value;
+
          end if;
 
          --  Add value for composite tag
@@ -325,11 +331,11 @@ package body Pages is
 
                --  Set update frequency for the page in the sitemap
                elsif Name = "changefreq" then
-                  Change_Frequency := To_Unbounded_String (Value);
+                  Change_Frequency := +Value;
 
                --  Set priority for the page in the sitemap
                elsif Name = "priority" then
-                  Page_Priority := To_Unbounded_String (Value);
+                  Page_Priority := +Value;
 
                   if not Is_Priority_Value (Value) then
                      raise Sitemap_Invalid_Value
@@ -361,12 +367,9 @@ package body Pages is
       begin
          -- Check layout
          if Layout /= "" then
-            if not Ada.Directories.Exists (To_String (Layout)) then
+            if not Ada.Directories.Exists (-Layout) then
                raise Layout_Not_Found
-                 with
-                   File_Name
-                   & """. Selected layout file """
-                   & To_String (Layout);
+                 with File_Name & """. Selected layout file """ & (-Layout);
             end if;
          end if;
 
@@ -374,7 +377,7 @@ package body Pages is
          if Change_Frequency /= "" then
             declare
                Valid_Value : constant Boolean :=
-                 Is_Frequency_Value (To_String (Change_Frequency));
+                 Is_Frequency_Value (-Change_Frequency);
             begin
                if not Valid_Value then
                   raise Sitemap_Invalid_Value
@@ -387,7 +390,7 @@ package body Pages is
          if Page_Priority /= "" then
             declare
                Valid_Priority : constant Boolean :=
-                 Is_Priority_Value (To_String (Page_Priority));
+                 Is_Priority_Value (-Page_Priority);
             begin
                if not Valid_Priority then
                   raise Sitemap_Invalid_Value
@@ -407,7 +410,7 @@ package body Pages is
       declare
          HTML : constant String :=
            CMark.Markdown_To_HTML
-             (Text         => To_String (Content),
+             (Text         => -Content,
               HTML_Enabled => Yass_Conf.HTML_Enabled);
       begin
          Page_Tags.Include ("Content", HTML);
@@ -425,7 +428,7 @@ package body Pages is
       Insert_Tags (Tags_List => Site_Tags);
 
       --  Canonicallink
-      if not Exists (Set => Tags, Variable => "canonicallink") then
+      if not Exists (Tags, "canonicallink") then
          declare
             First : constant Natural :=
               Length (Yass_Conf.Output_Directory & Dir_Separator) + 1;
@@ -434,7 +437,7 @@ package body Pages is
               New_File_Name (First .. New_File_Name'Last);
 
             Link : constant String :=
-              To_String (Yass_Conf.Base_Url) & Dir_Separator & Link_2;
+              (-Yass_Conf.Base_Url) & Dir_Separator & Link_2;
          begin
             Insert (Tags, Assoc ("canonicallink", Link));
          end;
@@ -442,7 +445,7 @@ package body Pages is
 
       --  Author
       if not Exists (Tags, "author") then
-         Insert (Tags, Assoc ("author", To_String (Yass_Conf.Author_Name)));
+         Insert (Tags, Assoc ("author", -Yass_Conf.Author_Name));
       end if;
 
       --  Description
@@ -473,7 +476,7 @@ package body Pages is
       Insert_Tags (Tags_List => Page_Tags);
 
       --  Create HTML file in Output_Directory
-      Create_Path (New_Directory => To_String (Output_Directory));
+      Create_Path (New_Directory => -Output_Directory);
 
       declare
          Page_File : File_Type;
@@ -482,13 +485,13 @@ package body Pages is
            (File => Page_File, Mode => Append_File, Name => New_File_Name);
 
          if Layout = "" then
-            raise Layout_Not_Found with To_String (Layout);
+            raise Layout_Not_Found with (-Layout);
          end if;
 
          Put
            (Page_File,
             Decode
-              (Parse (Filename => To_String (Layout), Translations => Tags)));
+              (Parse (Filename => -Layout, Translations => Tags)));
 
          Close (Page_File);
       end;
@@ -497,12 +500,12 @@ package body Pages is
       if In_Sitemap then
          Sitemaps.Add_Page_To_Sitemap
            (File_Name        => New_File_Name,
-            Change_Frequency => To_String (Change_Frequency),
-            Page_Priority    => To_String (Page_Priority));
+            Change_Frequency => -Change_Frequency,
+            Page_Priority    => -Page_Priority);
       end if;
 
       --  Add the page to the Atom feed
-      if Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("tags") then
+      if Yass_Conf.Atom_Feed_Source = "tags" then
          Atom_Entries (Atom_Entries.First_Index).Content := Content;
       end if;
 
@@ -564,10 +567,10 @@ package body Pages is
 
       use Config;
 
-      Output_Directory : constant Unbounded_String :=
+      Output_Directory : constant UString :=
         Yass_Conf.Output_Directory
         & Delete
-            (Source  => To_Unbounded_String (Directory),
+            (Source  => +Directory,
              From    => 1,
              Through => Length (Site_Directory));
 
@@ -582,27 +585,27 @@ package body Pages is
          Page_Table_Tags => Page_Table_Tags);
 
       --  Copy the file to output directory
-      Create_Path (New_Directory => To_String (Output_Directory));
+      Create_Path (New_Directory => -Output_Directory);
 
       if Ada.Directories.Kind (Name => File_Name) = Ada.Directories.Directory
       then
          Create_Path
            (New_Directory =>
-              To_String (Output_Directory)
+              (-Output_Directory)
               & Dir_Separator
               & Simple_Name (Name => File_Name));
       else
          Ada.Directories.Copy_File
            (Source_Name => File_Name,
             Target_Name =>
-              To_String (Output_Directory)
+              (-Output_Directory)
               & Dir_Separator
               & Simple_Name (Name => File_Name));
 
          if Extension (Name => File_Name) = "html" then
             Sitemaps.Add_Page_To_Sitemap
               (File_Name        =>
-                 To_String (Output_Directory)
+                 (-Output_Directory)
                  & Dir_Separator
                  & Simple_Name (Name => File_Name),
                Change_Frequency => "",
@@ -612,7 +615,7 @@ package body Pages is
          Ada.Environment_Variables.Set
            (Name  => "YASSFILE",
             Value =>
-              To_String (Output_Directory)
+              (-Output_Directory)
               & Dir_Separator
               & Simple_Name (File_Name));
       end if;
@@ -635,7 +638,7 @@ package body Pages is
       use Config;
 
       Index_File : File_Type;
-      Comment    : constant String := To_String (Yass_Conf.Markdown_Comment);
+      Comment    : constant String := -Yass_Conf.Markdown_Comment;
 
       procedure PL (Item : String);
 
@@ -755,8 +758,8 @@ package body Pages is
 
       Page_File : File_Type;
 
-      Data   : Unbounded_String;
-      Layout : Unbounded_String := Null_Unbounded_String;
+      Data   : UString;
+      Layout : UString := Null_UString;
 
       Start_Pos : constant Positive := Length (Yass_Conf.Markdown_Comment);
    begin
@@ -764,9 +767,7 @@ package body Pages is
 
       Find_Layout_Name_Loop :
       while not End_Of_File (Page_File) loop
-         Data :=
-           To_Unbounded_String
-             (Source => Encode (Item => Get_Line (Page_File)));
+         Data := +Encode (Item => Get_Line (Page_File));
 
          if Length (Data) > 2
            and then Unbounded_Slice
@@ -780,21 +781,15 @@ package body Pages is
                 (Source => Data, Low => 12, High => Length (Data));
 
             Layout :=
-              Yass_Conf.Layouts_Directory
-              & Dir_Separator
-              & Data
-              & To_Unbounded_String (".html");
+              Yass_Conf.Layouts_Directory & Dir_Separator & Data & ".html";
 
-            if not Ada.Directories.Exists (Name => To_String (Layout)) then
+            if not Ada.Directories.Exists (-Layout) then
                Close (Page_File);
                raise Layout_Not_Found
-                 with
-                   File_Name
-                   & """. Selected layout file """
-                   & To_String (Layout);
+                 with File_Name & """. Selected layout file """ & (-Layout);
             end if;
             Close (Page_File);
-            return To_String (Layout);
+            return -Layout;
          end if;
       end loop Find_Layout_Name_Loop;
 
