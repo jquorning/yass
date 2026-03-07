@@ -29,8 +29,8 @@ executables = ["yass"]
 [gpr-externals]
 Mode = ["dev", "debug", "release", "analyze"]
 
-[gpr-set-externals]
-Mode = "release"
+#[gpr-set-externals]
+#Mode = "release"
 
 [[depends-on]]
 libcmark = ">=0.0.1"

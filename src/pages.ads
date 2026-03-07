@@ -20,7 +20,7 @@
 -- Provide code to create pages from Markdown files
 -- SOURCE
 package Pages is
--- ****
+   -- ****
 
    -- ****e* Pages/Pages.Generate_Site_Exception
    -- FUNCTION
@@ -38,12 +38,10 @@ package Pages is
    -- Directory - Full path to the directory where newly create HTML file will
    --             be added
    -- SOURCE
-   procedure Create_Page (File_Name : String;
-                          Directory : String)
+   procedure Create_Page (File_Name : String; Directory : String)
    with
-      Pre => File_Name'Length > 0 and Directory'Length > 0,
-      Test_Case => (Name => "Test_Create_Page",
-                    Mode => Nominal);
+     Pre       => File_Name'Length > 0 and Directory'Length > 0,
+     Test_Case => (Name => "Test_Create_Page", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Copy_File
@@ -54,12 +52,10 @@ package Pages is
    -- File_Name - Full path to the file which will be copied
    -- Directory - Full path to the directory where file will be added
    -- SOURCE
-   procedure Copy_File (File_Name : String;
-                        Directory : String)
+   procedure Copy_File (File_Name : String; Directory : String)
    with
-      Pre => File_Name'Length > 0 and Directory'Length > 0,
-      Test_Case => (Name => "Test_Copy_File",
-                    Mode => Nominal);
+     Pre       => File_Name'Length > 0 and Directory'Length > 0,
+     Test_Case => (Name => "Test_Copy_File", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Create_Empty_File
@@ -70,9 +66,8 @@ package Pages is
    -- SOURCE
    procedure Create_Empty_File (File_Name : String)
    with
-      Pre => File_Name'Length > 0,
-      Test_Case => (Name => "Test_Create_Empty_File",
-                    Mode => Nominal);
+     Pre       => File_Name'Length > 0,
+     Test_Case => (Name => "Test_Create_Empty_File", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Get_Layout_Name
@@ -85,9 +80,54 @@ package Pages is
    -- SOURCE
    function Get_Layout_Name (File_Name : String) return String
    with
-      Pre => File_Name'Length > 0,
-      Test_Case => (Name => "Test_Get_Layout_Name",
-                    Mode => Nominal);
+     Pre       => File_Name'Length > 0,
+     Test_Case => (Name => "Test_Get_Layout_Name", Mode => Nominal);
+   -- ****
+
+private
+
+   -- ****f* Pages/Pages.Get_Name
+   -- FUNCTION
+   -- Get tag name if Item
+   -- PARAMETERS
+   -- Item - String to check if is valid tag name
+   -- RESULT
+   -- Value of tag if comment and comma present. Else empty string.
+   -- SOURCE
+   function Get_Tag_Name (Item : String) return String;
+   -- ****
+
+   -- ****f* Pages/Pages.Get_Value
+   -- FUNCTION
+   -- Get tag value of Item
+   -- PARAMETERS
+   -- Item - String
+   -- RESULT
+   -- Value of tag if comma present. Else empty string.
+   -- SOURCE
+   function Get_Tag_Value (Item : String) return String;
+   -- ****
+
+   -- ****f* Pages/Pages.Is_Frequency_Value
+   -- FUNCTION
+   -- Check if Value is valid frequency
+   -- PARAMETERS
+   -- Value - String to check if is valid frequency
+   -- RESULT
+   -- True when Value is valid frequency
+   -- SOURCE
+   function Is_Frequency_Value (Value : String) return Boolean;
+   -- ****
+
+   -- ****f* Pages/Pages.Is_Priority_Value
+   -- FUNCTION
+   -- Check if Value is valid priority
+   -- PARAMETERS
+   -- Value - String to check if is valid priority
+   -- RESULT
+   -- True when Value is valid priority
+   -- SOURCE
+   function Is_Priority_Value (Value : String) return Boolean;
    -- ****
 
 end Pages;
