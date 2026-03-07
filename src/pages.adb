@@ -137,8 +137,7 @@ package body Pages is
       Change_Frequency : Unbounded_String;
       Page_Priority    : Unbounded_String;
 
-      Page_File : File_Type;
-      Tags      : Translate_Set :=
+      Tags : Translate_Set :=
         Null_Set; --## rule line off GLOBAL_REFERENCES
 
       Output_Directory : constant Unbounded_String :=
@@ -177,6 +176,9 @@ package body Pages is
 
       procedure Insert_Tags (Tags_List : Tags_Container.Map);
       -- Insert selected list of tags Tags_List to templates
+
+      procedure Read_Page (File_Name : String);
+      --
 
       -------------
       -- Add_Tag --
@@ -290,9 +292,12 @@ package body Pages is
          end loop Insert_Tags_Loop;
       end Insert_Tags;
 
-   begin
-      Read_Page_File_Block :
-      declare
+      ---------------
+      -- Read_Page --
+      ---------------
+
+      procedure Read_Page (File_Name : String) is
+         Page_File   : File_Type;
          Valid_Value : Boolean := False;
       begin
          --  Read selected markdown file
@@ -364,7 +369,10 @@ package body Pages is
 
          Close (Page_File);
 
-      end Read_Page_File_Block;
+      end Read_Page;
+
+   begin
+      Read_Page (File_Name);
 
       --  Convert markdown to HTML
       Page_Tags.Include
@@ -450,20 +458,26 @@ package body Pages is
       --  Create HTML file in Output_Directory
       Create_Path (New_Directory => To_String (Output_Directory));
 
-      Create (File => Page_File, Mode => Append_File, Name => New_File_Name);
+      declare
+         Page_File : File_Type;
+      begin
+         Create
+           (File => Page_File, Mode => Append_File, Name => New_File_Name);
 
-      if Layout = "" then
-         raise Layout_Not_Found with To_String (Layout);
-      end if;
+         if Layout = "" then
+            raise Layout_Not_Found with To_String (Layout);
+         end if;
 
-      Put
-        (File => Page_File,
-         Item =>
-           Decode
-             (Item =>
-                Parse (Filename => To_String (Layout), Translations => Tags)));
+         Put
+           (File => Page_File,
+            Item =>
+              Decode
+                (Item =>
+                   Parse
+                     (Filename => To_String (Layout), Translations => Tags)));
 
-      Close (Page_File);
+         Close (Page_File);
+      end;
 
       --  Add the page to the sitemap
       if In_Sitemap then
@@ -501,7 +515,7 @@ package body Pages is
       when An_Exception : Template_Error =>
          Put_Line (Item => Exception_Message (X => An_Exception));
          if Ada.Directories.Exists (Name => New_File_Name) then
-            Close (File => Page_File);
+--          Close (File => Page_File);
             Delete_File (Name => New_File_Name);
          end if;
          raise Generate_Site_Exception;
