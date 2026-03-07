@@ -633,7 +633,6 @@ package body Pages is
 
    procedure Create_Empty_File (File_Name : String) is
       use Ada.Text_IO;
-      use Ada.Strings.Unbounded;
 
       use Config;
 
@@ -750,51 +749,42 @@ package body Pages is
    ---------------------
 
    function Get_Layout_Name (File_Name : String) return String is
-      use Ada.Strings.Unbounded;
       use Ada.Strings.UTF_Encoding.Strings;
       use Ada.Text_IO;
 
       use Config;
 
       Page_File : File_Type;
-
-      Data   : UString;
-      Layout : UString := Null_UString;
-
-      Start_Pos : constant Positive := Length (Yass_Conf.Markdown_Comment);
+      Layout    : UString;
    begin
       Open (File => Page_File, Mode => In_File, Name => File_Name);
 
       Find_Layout_Name_Loop :
       while not End_Of_File (Page_File) loop
-         Data := +Encode (Item => Get_Line (Page_File));
-
-         if Length (Data) > 2
-           and then Unbounded_Slice
-                      (Source => Data, Low => 1, High => Start_Pos)
-                    = Yass_Conf.Markdown_Comment
-           and then Index (Source => Data, Pattern => "layout:", From => 1)
-                    = Start_Pos + 2
-         then
-            Data :=
-              Unbounded_Slice
-                (Source => Data, Low => 12, High => Length (Data));
-
-            Layout :=
-              Yass_Conf.Layouts_Directory & Dir_Separator & Data & ".html";
-
-            if not Ada.Directories.Exists (-Layout) then
-               Close (Page_File);
-               raise Layout_Not_Found
-                 with File_Name & """. Selected layout file """ & (-Layout);
+         declare
+            Line  : constant String := Get_Line (Page_File);
+            Data  : constant String := Encode (Line);
+            Name  : constant String := Get_Tag_Name (Data);
+            Value : constant String := Get_Tag_Value (Data);
+         begin
+            if Name = "layout" then
+               Layout :=
+                 Yass_Conf.Layouts_Directory & Dir_Separator & Value & ".html";
+               exit Find_Layout_Name_Loop;
             end if;
-            Close (Page_File);
-            return -Layout;
-         end if;
+         end;
       end loop Find_Layout_Name_Loop;
 
       Close (Page_File);
 
+      if Layout = "" then
+         return "";
+      end if;
+
+      if not Ada.Directories.Exists (-Layout) then
+         raise Layout_Not_Found
+           with File_Name & """. Selected layout file """ & (-Layout);
+      end if;
       return "";
    end Get_Layout_Name;
 
