@@ -421,9 +421,6 @@ package body Pages is
          Page_Tags       => Page_Tags,
          Page_Table_Tags => Page_Table_Tags);
 
-      --  Insert tags to template
-      Insert (Tags, Assoc ("Content", Page_Tags ("Content")));
-
       Insert_Tags (Tags_List => Site_Tags);
 
       --  Canonicallink
@@ -474,7 +471,16 @@ package body Pages is
 
       Insert_Tags (Tags_List => Page_Tags);
 
-      --  Create HTML file in Output_Directory
+      --  Insert tags to template
+      --  Insert content
+      declare
+         C   : constant String := Page_Tags ("Content");
+         C_2 : constant String := Parse_Content (Tags, C);
+      begin
+         -- Insert (Tags, Assoc ("Content", Page_Tags ("Content")));
+         Insert (Tags, Assoc ("content", C_2));
+      end;
+
       Create_Path (New_Directory => Output_Directory);
 
       declare
@@ -807,5 +813,54 @@ package body Pages is
 
       return -Layout;
    end Get_Layout_Name;
+
+   --------------------
+   -- Parse_Contents --
+   --------------------
+
+   function Parse_Content
+     (Tags : Templates_Parser.Translate_Set; Content : String) return String
+   is
+      use Ada.Strings;
+      use Templates_Parser;
+      use Config;
+
+      Tag_Start : constant String := -Yass_Conf.Start_Tag_Separator;
+      Tag_End   : constant String := -Yass_Conf.End_Tag_Separator;
+      From      : Natural := Content'First;
+      Pos_1     : Natural;
+      Pos_2     : Natural;
+      Buffer    : UString;
+   begin
+      while From <= Content'Last loop
+         Pos_1 := Fixed.Index (Content, Tag_Start, From => From);
+         if Pos_1 = 0 then
+            exit;
+         end if;
+         Pos_2 := Fixed.Index (Content, Tag_End, From => Pos_1);
+         if Pos_2 = 0 then
+            --  Unmatched tag - runaway tag?
+            exit;
+         end if;
+
+         declare
+            Tag : constant String :=
+              Content (Pos_1 + Tag_Start'Length .. Pos_2 - 1);
+
+            Trimmed : constant String := Fixed.Trim (Tag, Side => Both);
+         begin
+            Unbounded.Append (Buffer, Content (From .. Pos_1 - 1));
+            if Exists (Tags, Trimmed) then
+               Unbounded.Append (Buffer, Get (Get (Tags, Trimmed)));
+            else
+               Unbounded.Append
+                 (Buffer, Content (Pos_1 .. Pos_2 + Tag_End'Length - 1));
+            end if;
+            From := Pos_2 + Tag_End'Length;
+         end;
+      end loop;
+      Unbounded.Append (Buffer, Content (From .. Content'Last));
+      return -Buffer;
+   end Parse_Content;
 
 end Pages;

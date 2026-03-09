@@ -15,6 +15,8 @@
 --    You should have received a copy of the GNU General Public License
 --    along with YASS.  If not, see <http://www.gnu.org/licenses/>.
 
+with Templates_Parser;
+
 -- ****h* Yass/Pages
 -- FUNCTION
 -- Provide code to create pages from Markdown files
@@ -128,6 +130,19 @@ private
    -- True when Value is valid priority
    -- SOURCE
    function Is_Priority_Value (Value : String) return Boolean;
+   -- ****
+
+   -- ****f* Pages/Pages.Parse_Content
+   -- FUNCTION
+   -- Parse Content inserting tags where due
+   -- PARAMETERS
+   -- Tags - Tags to insert
+   -- Content - Content string to parse
+   -- RESULT
+   -- Parsed content
+   -- SOURCE
+   function Parse_Content
+     (Tags : Templates_Parser.Translate_Set; Content : String) return String;
    -- ****
 
 end Pages;
