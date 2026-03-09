@@ -820,7 +820,8 @@ package body Pages is
          raise Layout_Not_Found
            with File_Name & """. Selected layout file """ & (-Layout);
       end if;
-      return "";
+
+      return -Layout;
    end Get_Layout_Name;
 
 end Pages;
