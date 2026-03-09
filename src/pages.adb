@@ -262,39 +262,23 @@ package body Pages is
       begin
          Insert_Tags_Loop :
          for I in Tags_List.Iterate loop
+            declare
+               Tag      : constant String := Tags_List (I);
+               Variable : constant String := Tags_Container.Key (I);
+            begin
+               if To_Lower (Tag) = "true" then
+                  Insert (Tags, Assoc (Variable, Value => True));
 
-            if To_Lower (Item => Tags_List (I)) = "true" then
-               Insert
-                 (Set  => Tags,
-                  Item =>
-                    Assoc
-                      (Variable => Tags_Container.Key (Position => I),
-                       Value    => True));
-
-            elsif To_Lower (Item => Tags_List (I)) = "false" then
-               Insert
-                 (Set  => Tags,
-                  Item =>
-                    Assoc
-                      (Variable => Tags_Container.Key (Position => I),
-                       Value    => False));
-            else
-               if Is_Number (S => Tags_List (I)) then
-                  Insert
-                    (Set  => Tags,
-                     Item =>
-                       Assoc
-                         (Variable => Tags_Container.Key (Position => I),
-                          Value    => Integer'Value (Tags_List (I))));
+               elsif To_Lower (Tag) = "false" then
+                  Insert (Tags, Assoc (Variable, Value => False));
                else
-                  Insert
-                    (Set  => Tags,
-                     Item =>
-                       Assoc
-                         (Variable => Tags_Container.Key (Position => I),
-                          Value    => Tags_List (I)));
+                  if Is_Number (Tag) then
+                     Insert (Tags, Assoc (Variable, Integer'Value (Tag)));
+                  else
+                     Insert (Tags, Assoc (Variable, Tag));
+                  end if;
                end if;
-            end if;
+            end;
          end loop Insert_Tags_Loop;
       end Insert_Tags;
 
