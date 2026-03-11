@@ -637,16 +637,13 @@ package body Pages is
    procedure Create_Empty_File (File_Name : String) is
       use Ada.Text_IO;
 
-      use Config;
-
       Index_File : File_Type;
-      Comment    : constant String := -Yass_Conf.Markdown_Comment;
 
-      procedure PL (Item : String);
+      procedure PL (Item : String := "");
 
-      procedure PL (Item : String) is
+      procedure PL (Item : String := "") is
       begin
-         Put_Line (Index_File, Comment & " " & Item);
+         Put_Line (Index_File, Item);
       end PL;
 
    begin
@@ -659,89 +656,105 @@ package body Pages is
             Name => File_Name & Dir_Separator & "index.md");
       end if;
 
-      PL
-        ("All lines which starts with double minus sign are comments and ignored");
-      PL
-        ("by program. Unless they have colon sign. Then they are tags definition.");
-      PL
-        ("Ada Web Server template which will be used as HTML template for this");
-      PL ("file. Required for each file");
-      PL ("");
+      PL ("---");
       PL ("layout: default");
-      PL ("");
+      PL ("---");
+      PL;
+      PL ("## Welcome to Yass");
+      PL;
+      PL ("### Preamble");
+      PL;
+      PL ("The `.md` file must start with a preamble. It looks like this:");
+      PL;
+      PL ("```");
+      PL ("---");
+      PL ("layout: default");
+      PL ("---");
+      PL ("```");
+      PL;
+      PL ("*Ada Web Server* template which will be used as HTML template for");
+      PL ("this file. Required for each file");
+      PL;
+      PL ("### Format");
+      PL;
       PL
         ("You may add as many tags as you want, and they can be in any place in");
       PL
         ("file, not only at beginning. Tags can be 4 types: strings, boolean,");
       PL ("numeric or composite.");
+      PL;
       PL
-        ("First 3 types of tags are in Name: Value scheme. For strings, it can be");
+        ("First 3 types of tags are in `Name: Value` scheme. For strings, it can");
       PL
-        ("any alphanumeric value without new line sign. For boolean it must be");
+        ("be any alphanumeric value without new line sign. For boolean it must");
       PL
-        ("""true"" or ""false"", for numeric any number. Program will detect self");
+        ("be `true` or `false`, for numeric any number. Program will detect self");
       PL ("which type of tag is and properly set it. It always falls back to");
       PL ("string value.");
+      PL;
       PL
-        ("Composite tags first must be initialized with Name: [] then just add");
-      PL ("as many as you want values to it by Name: Value scheme.");
-      PL ("");
+        ("Composite tags first must be initialized with `Name: []` then just add");
+      PL ("as many as you want values to it by `Name: Value` scheme.");
+      PL;
       PL
         ("For more information about tags please check program documentation.");
-      PL ("");
+      PL;
+      PL ("### Sitemap");
+      PL;
       PL
         ("If you have enabled creation of sitemap in the project config file,");
       PL
         ("you can set some sitemap parameters too. They are defined in this same");
-      PL ("way like tags, with ParameterName: Value.");
-      PL ("");
+      PL ("way like tags, with `ParameterName: Value`.");
+      PL;
+      PL ("### Priority and Changefreq");
+      PL;
       PL
-        ("priority - The priority of this URL relative to other URLs on your site,");
-      PL ("           value between 0.0 and 1.0.");
+        ("- `priority`. The priority of this URL relative to other URLs on your");
+
+      PL ("site. Value between `0.0` and `1.0`.");
       PL
-        ("changefreq - How frequently the page is likely to change, value can be");
+        ("- `changefreq`. How frequently the page is likely to change, value");
       PL
-        ("             always, hourly, daily, weekly, monthly, yearly or never.");
-      PL ("");
-      PL
-        ("For more information how this options works, please look at the program");
-      PL ("documentation.");
-      PL ("");
+        ("can be `always`, `hourly`, `daily`, `weekly`, `monthly`, `yearly` or");
+      PL ("`never`.");
+      PL;
+      PL ("For more information how this options works, please look at the");
+      PL ("program documentation.");
+      PL;
       PL ("Additionally, you can exclude this file from adding to sitemap by");
-      PL ("setting option insitemap: false.");
-      PL ("");
+      PL ("setting option `insitemap: false`.");
+      PL;
+      PL ("### Atom Feed");
+      PL;
       PL
         ("If you have enabled creating Atom feed for the site, you must specify");
+      PL ("`title` tag for this page. If you want to use this file as a main");
       PL
-        ("""title"" tag for this page. If you want to use this file as a main");
-      PL
-        ("source of Atom feed, then you must add ""title"" tag for each section");
+        ("source of Atom feed, then you must add `title` tag for each section");
       PL
         ("which will be used as source for Atom feed entry. If you want to set");
       PL
-        ("author name for Atom feed, you must add ""author"" tag or setting Author");
+        ("author name for Atom feed, you must add `author` tag or setting Author");
       PL
         ("from configuration file will be used. When you want to set author email");
+      PL ("for Atom feed, you must add `authoremail` tag. If you want to add");
       PL
-        ("for Atom feed, you must add ""authoremail"" tag. If you want to add");
-      PL
-        ("short entry summary, you must add tag ""summary"". Do that tag will be");
-      PL
-        ("for whole page or for each entry depends on your Atom feed configuration.");
-      PL ("");
+        ("short entry summary, you must add tag `summary`. Do that tag will be");
+      PL ("for whole page or for each entry depends on your Atom feed");
+      PL ("configuration.");
+      PL;
+      PL ("### Canonical Link");
+      PL;
       PL
         ("You can also specify canonical link for the page. If you don't set it");
       PL
         ("here, the program will generate it automatically. To set the default");
-      PL
-        ("canonical link for the page set tag ""canonicallink"". It must be a");
-      PL ("full URL (with https://).");
-      PL ("By setting ""author"" tag for the page, you can overwrite the");
+      PL ("canonical link for the page set tag `canonicallink`. It must be a");
+      PL ("full URL (with [https://](https://)).");
+      PL;
+      PL ("By setting `author` tag for the page, you can overwrite the");
       PL ("configuration setting for meta tag author for the page.");
-      PL ("");
-      PL ("title: New page");
-      PL ("");
-      PL ("You can without problem delete all this comments from this file.");
 
       Close (Index_File);
 
