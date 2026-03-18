@@ -14,6 +14,7 @@ package body Config.Test_Data is
    procedure Tear_Down(Gnattest_T: in out Test) is
       pragma Unreferenced(Gnattest_T);
    begin
-      null;
+      Yass_Conf := Default_Parser_Configuration;
+      Yass_Conf.Excluded_Files.Clear;
    end Tear_Down;
 end Config.Test_Data;

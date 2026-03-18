@@ -197,7 +197,8 @@ package Config is
 
    -- ****f* Config/Config.Interactive_Site_Config
    -- SOURCE
-   procedure Interactive_Site_Config;
+   procedure Interactive_Site_Config
+   with Test_Case => (Name => "Test_Interactive_Site_Config", Mode => Nominal);
    -- FUNCTION
    -- Ask user for configuration.
    -- ****

@@ -6,11 +6,10 @@ with Gnattest_Generated;
 
 package Messages.Test_Data.Tests is
 
-   type Test is
-   new GNATtest_Generated.GNATtest_Standard.Messages.Test_Data.Test with
-   null record;
+   type Test is new GNATtest_Generated.GNATtest_Standard.Messages.Test_Data.Test
+   with null record;
 
-   procedure Test_Show_Message_b0ef3e_268f83(Gnattest_T: in out Test);
+   procedure Test_Show_Message_b0ef3e_268f83 (Gnattest_T : in out Test);
 
 end Messages.Test_Data.Tests;
 --  end read only

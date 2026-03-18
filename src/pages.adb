@@ -181,7 +181,7 @@ package body Pages is
       -- Name: name of the tag
       -- Value: value of the tag
 
-      procedure Insert_Tags (Tags_List : Tags_Container.Map);
+      procedure Insert_Tags (Tags_List : Tags_Container.Map; Prefix : String);
       -- Insert selected list of tags Tags_List to templates
 
       procedure Read_Page (File_Name : String);
@@ -257,14 +257,15 @@ package body Pages is
       -- Insert_Tags --
       -----------------
 
-      procedure Insert_Tags (Tags_List : Tags_Container.Map) is
+      procedure Insert_Tags (Tags_List : Tags_Container.Map; Prefix : String)
+      is
          use AWS.Templates.Utils;
       begin
          Insert_Tags_Loop :
          for I in Tags_List.Iterate loop
             declare
                Tag      : constant String := Tags_List (I);
-               Variable : constant String := Tags_Container.Key (I);
+               Variable : constant String := Prefix & Tags_Container.Key (I);
             begin
                if To_Lower (Tag) = "true" then
                   Insert (Tags, Assoc (Variable, Value => True));
@@ -421,7 +422,7 @@ package body Pages is
          Page_Tags       => Page_Tags,
          Page_Table_Tags => Page_Table_Tags);
 
-      Insert_Tags (Tags_List => Site_Tags);
+      Insert_Tags (Tags_List => Site_Tags, Prefix => "");
 
       --  Canonicallink
       if not Exists (Tags, "canonicallink") then
@@ -469,7 +470,7 @@ package body Pages is
                Global_Table_Tags (I)));
       end loop Add_Global_Table_Tags_Loop;
 
-      Insert_Tags (Tags_List => Page_Tags);
+      Insert_Tags (Tags_List => Page_Tags, Prefix => "");
 
       --  Insert tags to template
       --  Insert content

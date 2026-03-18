@@ -34,18 +34,18 @@ package body Sitemaps.Test_Data.Tests is
 --  begin read only
 --  end read only
 --  begin read only
-   procedure Wrap_Test_Start_Sitemap_8927d0_223cc9 is
+   procedure Wrap_Test_Start_Sitemap_8927d0_223cc9
+   is
    begin
       GNATtest_Generated.GNATtest_Standard.Sitemaps.Start_Sitemap;
    end Wrap_Test_Start_Sitemap_8927d0_223cc9;
 --  end read only
 
 --  begin read only
-   procedure Test_Start_Sitemap_test_start_sitemap(Gnattest_T: in out Test);
-   procedure Test_Start_Sitemap_8927d0_223cc9(Gnattest_T: in out Test) renames
-     Test_Start_Sitemap_test_start_sitemap;
+   procedure Test_Start_Sitemap_test_start_sitemap (Gnattest_T : in out Test);
+   procedure Test_Start_Sitemap_8927d0_223cc9 (Gnattest_T : in out Test) renames Test_Start_Sitemap_test_start_sitemap;
 --  id:2.2/8927d00e0fdf45e6/Start_Sitemap/1/0/test_start_sitemap/
-   procedure Test_Start_Sitemap_test_start_sitemap(Gnattest_T: in out Test) is
+   procedure Test_Start_Sitemap_test_start_sitemap (Gnattest_T : in out Test) is
       procedure Start_Sitemap renames Wrap_Test_Start_Sitemap_8927d0_223cc9;
 --  end read only
 
@@ -61,26 +61,19 @@ package body Sitemaps.Test_Data.Tests is
 --  end read only
 
 --  begin read only
-   procedure Wrap_Test_Add_Page_To_Sitemap_3dbb1d_d33b30
-     (File_Name, Change_Frequency, Page_Priority: String) is
+   procedure Wrap_Test_Add_Page_To_Sitemap_b56c6a_d33b30 (File_Name        : String; Change_Frequency : String; Page_Priority    : String) 
+   is
    begin
-      GNATtest_Generated.GNATtest_Standard.Sitemaps.Add_Page_To_Sitemap
-        (File_Name, Change_Frequency, Page_Priority);
-   end Wrap_Test_Add_Page_To_Sitemap_3dbb1d_d33b30;
+      GNATtest_Generated.GNATtest_Standard.Sitemaps.Add_Page_To_Sitemap (File_Name, Change_Frequency, Page_Priority);
+   end Wrap_Test_Add_Page_To_Sitemap_b56c6a_d33b30;
 --  end read only
 
 --  begin read only
-   procedure Test_Add_Page_To_Sitemap_test_add_page_to_sitemap
-     (Gnattest_T: in out Test);
-   procedure Test_Add_Page_To_Sitemap_3dbb1d_d33b30
-     (Gnattest_T: in out Test) renames
-     Test_Add_Page_To_Sitemap_test_add_page_to_sitemap;
---  id:2.2/3dbb1dd1e8c223e0/Add_Page_To_Sitemap/1/0/test_add_page_to_sitemap/
-   procedure Test_Add_Page_To_Sitemap_test_add_page_to_sitemap
-     (Gnattest_T: in out Test) is
-      procedure Add_Page_To_Sitemap
-        (File_Name, Change_Frequency, Page_Priority: String) renames
-        Wrap_Test_Add_Page_To_Sitemap_3dbb1d_d33b30;
+   procedure Test_Add_Page_To_Sitemap_test_add_page_to_sitemap (Gnattest_T : in out Test);
+   procedure Test_Add_Page_To_Sitemap_b56c6a_d33b30 (Gnattest_T : in out Test) renames Test_Add_Page_To_Sitemap_test_add_page_to_sitemap;
+--  id:2.2/b56c6a0dcdfc60ec/Add_Page_To_Sitemap/1/0/test_add_page_to_sitemap/
+   procedure Test_Add_Page_To_Sitemap_test_add_page_to_sitemap (Gnattest_T : in out Test) is
+      procedure Add_Page_To_Sitemap (File_Name        : String; Change_Frequency : String; Page_Priority    : String) renames Wrap_Test_Add_Page_To_Sitemap_b56c6a_d33b30;
 --  end read only
 
       pragma Unreferenced(Gnattest_T);
@@ -95,18 +88,18 @@ package body Sitemaps.Test_Data.Tests is
 --  end read only
 
 --  begin read only
-   procedure Wrap_Test_Save_Sitemap_ede18d_7f961d is
+   procedure Wrap_Test_Save_Sitemap_ede18d_7f961d
+   is
    begin
       GNATtest_Generated.GNATtest_Standard.Sitemaps.Save_Sitemap;
    end Wrap_Test_Save_Sitemap_ede18d_7f961d;
 --  end read only
 
 --  begin read only
-   procedure Test_Save_Sitemap_test_save_sitemap(Gnattest_T: in out Test);
-   procedure Test_Save_Sitemap_ede18d_7f961d(Gnattest_T: in out Test) renames
-     Test_Save_Sitemap_test_save_sitemap;
+   procedure Test_Save_Sitemap_test_save_sitemap (Gnattest_T : in out Test);
+   procedure Test_Save_Sitemap_ede18d_7f961d (Gnattest_T : in out Test) renames Test_Save_Sitemap_test_save_sitemap;
 --  id:2.2/ede18d12831cc9b2/Save_Sitemap/1/0/test_save_sitemap/
-   procedure Test_Save_Sitemap_test_save_sitemap(Gnattest_T: in out Test) is
+   procedure Test_Save_Sitemap_test_save_sitemap (Gnattest_T : in out Test) is
       procedure Save_Sitemap renames Wrap_Test_Save_Sitemap_ede18d_7f961d;
 --  end read only
 
@@ -117,7 +110,7 @@ package body Sitemaps.Test_Data.Tests is
       Save_Sitemap;
       Assert
         (Exists
-           (To_String(Yass_Config.Output_Directory) & Dir_Separator &
+           (To_String(Yass_Conf.Output_Directory) & Dir_Separator &
             "sitemap.xml"),
          "Failed to create the sitemap file.");
 

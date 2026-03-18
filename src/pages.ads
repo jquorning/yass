@@ -96,7 +96,8 @@ private
    -- RESULT
    -- Value of tag if comment and comma present. Else empty string.
    -- SOURCE
-   function Get_Tag_Name (Item : String) return String;
+   function Get_Tag_Name (Item : String) return String
+   with Test_Case => (Name => "Test_Get_Tag_Name", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Get_Value
@@ -107,7 +108,8 @@ private
    -- RESULT
    -- Value of tag if comma present. Else empty string.
    -- SOURCE
-   function Get_Tag_Value (Item : String) return String;
+   function Get_Tag_Value (Item : String) return String
+   with Test_Case => (Name => "Test_Get_Tag_Value", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Is_Frequency_Value
@@ -118,7 +120,8 @@ private
    -- RESULT
    -- True when Value is valid frequency
    -- SOURCE
-   function Is_Frequency_Value (Value : String) return Boolean;
+   function Is_Frequency_Value (Value : String) return Boolean
+   with Test_Case => (Name => "Test_Is_Frequency_Value", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Is_Priority_Value
@@ -129,7 +132,8 @@ private
    -- RESULT
    -- True when Value is valid priority
    -- SOURCE
-   function Is_Priority_Value (Value : String) return Boolean;
+   function Is_Priority_Value (Value : String) return Boolean
+   with Test_Case => (Name => "Test_Is_Priority_Value", Mode => Nominal);
    -- ****
 
    -- ****f* Pages/Pages.Parse_Content
@@ -142,7 +146,8 @@ private
    -- Parsed content
    -- SOURCE
    function Parse_Content
-     (Tags : Templates_Parser.Translate_Set; Content : String) return String;
+     (Tags : Templates_Parser.Translate_Set; Content : String) return String
+   with Test_Case => (Name => "Test_Parse_Content", Mode => Nominal);
    -- ****
 
 end Pages;

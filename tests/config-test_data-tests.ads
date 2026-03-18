@@ -6,13 +6,14 @@ with Gnattest_Generated;
 
 package Config.Test_Data.Tests is
 
-   type Test is
-   new GNATtest_Generated.GNATtest_Standard.Config.Test_Data.Test with
-   null record;
+   type Test is new GNATtest_Generated.GNATtest_Standard.Config.Test_Data.Test
+   with null record;
 
-   procedure Test_Create_Config_683023_a99277(Gnattest_T: in out Test);
+   procedure Test_Create_Site_Config_842f15_54b31b (Gnattest_T : in out Test);
 
-   procedure Test_Parse_Config_31244b_5fe7b0(Gnattest_T: in out Test);
+   procedure Test_Load_Site_Config_a9348d_aefb46 (Gnattest_T : in out Test);
+
+   procedure Test_Interactive_Site_Config_b53560_0c5672 (Gnattest_T : in out Test);
 
 end Config.Test_Data.Tests;
 --  end read only
