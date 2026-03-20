@@ -29,12 +29,12 @@ package body Modules.Test_Data.Tests is
 --  begin read only
 --  end read only
 --  begin read only
-   procedure Wrap_Test_Load_Modules_944a26_495a16
-     (State: String; Page_Tags: in out Tags_Container.Map;
-      Page_Table_Tags: in out TableTags_Container.Map) is
+   procedure Wrap_Test_Load_Modules_944a26_495a16 (State           : String; Page_Tags       : in out Tags_Container.Map; Page_Table_Tags : in out TableTags_Container.Map) 
+   is
    begin
       begin
-         pragma Assert(State'Length > 0);
+         pragma Assert
+           (State'Length > 0);
          null;
       exception
          when System.Assertions.Assert_Failure =>
@@ -42,21 +42,16 @@ package body Modules.Test_Data.Tests is
               (False,
                "req_sloc(modules.ads:0:):Test_Load_Modules test requirement violated");
       end;
-      GNATtest_Generated.GNATtest_Standard.Modules.Load_Modules
-        (State, Page_Tags, Page_Table_Tags);
+      GNATtest_Generated.GNATtest_Standard.Modules.Load_Modules (State, Page_Tags, Page_Table_Tags);
    end Wrap_Test_Load_Modules_944a26_495a16;
 --  end read only
 
 --  begin read only
-   procedure Test_Load_Modules_test_load_modules(Gnattest_T: in out Test);
-   procedure Test_Load_Modules_944a26_495a16(Gnattest_T: in out Test) renames
-     Test_Load_Modules_test_load_modules;
+   procedure Test_Load_Modules_test_load_modules (Gnattest_T : in out Test);
+   procedure Test_Load_Modules_944a26_495a16 (Gnattest_T : in out Test) renames Test_Load_Modules_test_load_modules;
 --  id:2.2/944a2653cbe1fa78/Load_Modules/1/0/test_load_modules/
-   procedure Test_Load_Modules_test_load_modules(Gnattest_T: in out Test) is
-      procedure Load_Modules
-        (State: String; Page_Tags: in out Tags_Container.Map;
-         Page_Table_Tags: in out TableTags_Container.Map) renames
-        Wrap_Test_Load_Modules_944a26_495a16;
+   procedure Test_Load_Modules_test_load_modules (Gnattest_T : in out Test) is
+      procedure Load_Modules (State           : String; Page_Tags       : in out Tags_Container.Map; Page_Table_Tags : in out TableTags_Container.Map) renames Wrap_Test_Load_Modules_944a26_495a16;
 --  end read only
 
       pragma Unreferenced(Gnattest_T);

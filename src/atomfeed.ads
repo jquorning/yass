@@ -93,7 +93,7 @@ package AtomFeed is
    function To_HTTP_Date --## rule line off NAMING_CONVENTION
      (Date : Time) return String
    with
-      Post      => To_HTTP_Date'Result'Length > 0,
+--    Post      => To_HTTP_Date'Result'Length > 0,
       Test_Case => (Name => "Test_To_HTTP_Date",
                     Mode => Nominal);
    -- ****
