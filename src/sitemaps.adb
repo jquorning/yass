@@ -149,12 +149,12 @@ package body Sitemaps is
       Local_Main_Node : DOM.Core.Element;
       --## rule on IMPROPER_INITIALIZATION
    begin
-      if not Yass_Conf.Sitemap_Enabled then
+      if not Is_Sitemap_Enabled then
          return;
       end if;
 
       Sitemap_File_Name :=
-        Yass_Conf.Output_Directory &
+        Output_Directory &
         To_Unbounded_String (Dir_Separator & "sitemap.xml");
 
       -- Load existing sitemap data
@@ -222,10 +222,10 @@ package body Sitemaps is
       use Config;
 
       Url : constant String :=
-        To_String (Yass_Conf.Base_Url) & "/" &
+        Base_URL & "/" &
         Slice
           (Source => To_Unbounded_String (File_Name),
-           Low    => Length (Yass_Conf.Output_Directory & Dir_Separator) + 1,
+           Low    => String'(Output_Directory & Dir_Separator)'Length + 1,
            High   => File_Name'Length);
 
       Urls_List     : DOM.Core.Node_List;
@@ -248,7 +248,7 @@ package body Sitemaps is
       Local_Sitemap   : constant DOM.Core.Document := Get_Sitemap;
       Local_Main_Node : DOM.Core.Element := Main_Node;
    begin
-      if not Yass_Conf.Sitemap_Enabled then
+      if not Is_Sitemap_Enabled then
          return;
       end if;
 
@@ -432,7 +432,7 @@ package body Sitemaps is
 
       Sitemap_File : File_Type;
    begin
-      if not Yass_Conf.Sitemap_Enabled then
+      if not Is_Sitemap_Enabled then
          return;
       end if;
 
@@ -464,7 +464,7 @@ package body Sitemaps is
          Put_Line
            (File => Sitemap_File,
             Item =>
-              "Sitemap: " & To_String (Yass_Conf.Base_Url) &
+              "Sitemap: " & Base_URL &
               "/sitemap.xml");
          Close (Sitemap_File);
       end if;

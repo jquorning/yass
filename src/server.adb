@@ -17,7 +17,6 @@
 
 with Ada.Directories;
 with Ada.Strings.Fixed;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Directory_Operations;
@@ -57,7 +56,6 @@ package body Server is
    function Callback (Request : AWS.Status.Data) return AWS.Response.Data
    is
       use Ada.Directories;
-      use Ada.Strings.Unbounded;
       use GNAT.Directory_Operations;
       use AWS.Services.Directory;
       use Config;
@@ -65,21 +63,18 @@ package body Server is
       Uri : constant String := AWS.Status.URI (D => Request);
    begin
       -- Show directory listing if requested
-      if Kind
-          (Name => To_String (Yass_Conf.Output_Directory) & Uri) =
-        Directory
-      then
+      if Kind (Name => Output_Directory & Uri) = Directory then
          return
            AWS.Response.Build
              (Content_Type => "text/html",
               Message_Body =>
                 Browse
-                  (Directory_Name =>
-                     To_String (Yass_Conf.Output_Directory) & Uri,
+                  (Directory_Name    => Output_Directory & Uri,
                    Template_Filename =>
-                     To_String (Yass_Conf.Layouts_Directory) &
-                     Dir_Separator & "directory.html",
-                   Request => Request));
+                     Layouts_Directory
+                     & Dir_Separator
+                     & "directory.html",
+                   Request           => Request));
       end if;
       -- Show selected page if requested
       return AWS.Services.Page_Server.Callback (Request => Request);
@@ -98,7 +93,7 @@ package body Server is
       Server_Config : Object := Default_Config;
    begin
       Set.Server_Name    (Server_Config, "YASS static page server");
-      Set.Server_Port    (Server_Config, Yass_Conf.Server_Port);
+      Set.Server_Port    (Server_Config, Server_Port);
       Set.Max_Connection (Server_Config, 5);
       Set.Reuse_Address  (Server_Config, True);
 
@@ -108,7 +103,7 @@ package body Server is
 
       Put_Line ("Server was started.");
       Put_Line ("Web address: http://localhost:" &
-                Ada.Strings.Fixed.Trim (Yass_Conf.Server_Port'Image,
+                Ada.Strings.Fixed.Trim (Server_Port'Image,
                                         Side => Ada.Strings.Left) &
                 "/index.html");
       Put_Line ("Press ""Q"" for quit.");

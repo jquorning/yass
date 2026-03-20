@@ -69,7 +69,7 @@ package body Pages is
       Tags      : Translate_Set := Null_Set; --## rule line off GLOBAL_REFERENCES
 
       Output_Directory : constant Unbounded_String :=
-        Yass_Conf.Output_Directory &
+        Config.Output_Directory &
         Delete
           (Source  => To_Unbounded_String (Directory),
            From    => 1,
@@ -159,12 +159,10 @@ package body Pages is
 
          Data        : Unbounded_String := Null_Unbounded_String;
          Start_Index : Natural := 0;
-         Start_Pos   : constant Positive :=
-           Length (Yass_Conf.Markdown_Comment);
+         Start_Pos   : constant Positive := Markdown_Comment'Length;
          Valid_Value : Boolean := False;
 
-         procedure Add_Tag (Name  : String;
-                            Value : String);
+         procedure Add_Tag (Name : String; Value : String);
          -- Add tag to the page template tags lists (simple or composite).
          -- Name: name of the tag
          -- Value: value of the tag
@@ -173,9 +171,7 @@ package body Pages is
          -- Add_Tag --
          -------------
 
-         procedure Add_Tag (Name  : String;
-                            Value : String)
-         is
+         procedure Add_Tag (Name : String; Value : String) is
             use Ada.Calendar;
          begin
             --  Create new composite template tag
@@ -198,12 +194,10 @@ package body Pages is
                      Content      => Null_Unbounded_String));
 
             elsif Name = "id" then
-               Atom_Entries (Atom_Entries.First_Index).Id :=
-                 To_Unbounded_String (Value);
+               Atom_Entries (Atom_Entries.First_Index).Id := To_Unbounded_String (Value);
 
             elsif Name = "updated" then
-               Atom_Entries (Atom_Entries.First_Index).Updated :=
-                 To_Time (Date => Value);
+               Atom_Entries (Atom_Entries.First_Index).Updated := To_Time (Date => Value);
 
             elsif Name = "author" then
                Atom_Entries (Atom_Entries.First_Index).Author_Name :=
@@ -227,15 +221,14 @@ package body Pages is
                Page_Table_Tags (Name) := Page_Table_Tags (Name) & Value;
 
             --  Add value for simple tag
+
             else
-               Page_Tags.Include (Key      => Name,
-                                  New_Item => Value);
+               Page_Tags.Include (Key => Name, New_Item => Value);
             end if;
 
          exception
             when Constraint_Error =>
-               raise Invalid_Value
-                 with """" & Name & """ value """ & Value & """";
+               raise Invalid_Value with """" & Name & """ value """ & Value & """";
          end Add_Tag;
 
       begin
@@ -259,7 +252,7 @@ package body Pages is
             if
               Unbounded_Slice (Source => Data,
                                Low    => 1,
-                               High => Start_Pos) /= Yass_Conf.Markdown_Comment
+                               High => Start_Pos) /= Markdown_Comment
             then
                Append (Source => Content, New_Item => Data);
                Append (Source => Content, New_Item => LF);
@@ -277,7 +270,7 @@ package body Pages is
                          Low    => Start_Pos + 10,
                          High   => Length (Data));
 
-               Layout := Yass_Conf.Layouts_Directory & Dir_Separator & Data &
+               Layout := Layouts_Directory & Dir_Separator & Data &
                          To_Unbounded_String (".html");
 
                if not Ada.Directories.Exists (Name => To_String (Layout)) then
@@ -392,7 +385,7 @@ package body Pages is
         (Key      => "Content",
          New_Item => CMark.Markdown_To_HTML
                        (Text         => To_String (Content),
-                        HTML_Enabled => Yass_Conf.HTML_Enabled));
+                        HTML_Enabled => Is_HTML_Enabled));
 
       --  Load the program modules with 'pre' hook
       Modules.Load_Modules (State           => "pre",
@@ -414,20 +407,15 @@ package body Pages is
               Assoc
                 (Variable => "canonicallink",
                  Value    =>
-                   To_String (Yass_Conf.Base_Url) & "/" &
+                   Base_URL & "/" &
                    Slice
                      (Source => To_Unbounded_String (New_File_Name),
-                      Low    => Length (Yass_Conf.Output_Directory & Dir_Separator) + 1,
+                      Low    => Length (Output_Directory & Dir_Separator) + 1,
                       High   => New_File_Name'Length)));
       end if;
 
       if not Exists (Set => Tags, Variable => "author") then
-         Insert
-           (Set  => Tags,
-            Item =>
-              Assoc
-                (Variable => "author",
-                 Value    => To_String (Yass_Conf.Author_Name)));
+         Insert (Set => Tags, Item => Assoc (Variable => "author", Value => Author_Name));
       end if;
 
       if not Exists (Set => Tags, Variable => "description")
@@ -491,7 +479,7 @@ package body Pages is
       end if;
 
       --  Add the page to the Atom feed
-      if Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("tags") then
+      if Atom_Feed_Source = "tags" then
          Atom_Entries (Atom_Entries.First_Index).Content := Content;
       end if;
 
@@ -552,7 +540,7 @@ package body Pages is
       use Config;
 
       Output_Directory : constant Unbounded_String :=
-        Yass_Conf.Output_Directory &
+        Config.Output_Directory &
         Delete
           (Source  => To_Unbounded_String (Directory),
            From    => 1,
@@ -611,12 +599,10 @@ package body Pages is
    procedure Create_Empty_File (File_Name : String)
    is
       use Ada.Text_IO;
-      use Ada.Strings.Unbounded;
-
       use Config;
 
       Index_File : File_Type;
-      Comment    : constant String := To_String (Yass_Conf.Markdown_Comment);
+      Comment    : constant String := Markdown_Comment;
 
       procedure PL (Item : String);
 
@@ -700,8 +686,7 @@ package body Pages is
    -- Get_Layout_Name --
    ---------------------
 
-   function Get_Layout_Name (File_Name : String) return String
-   is
+   function Get_Layout_Name (File_Name : String) return String is
       use Ada.Strings.Unbounded;
       use Ada.Strings.UTF_Encoding.Strings;
       use Ada.Text_IO;
@@ -713,44 +698,32 @@ package body Pages is
       Data   : Unbounded_String;
       Layout : Unbounded_String := Null_Unbounded_String;
 
-      Start_Pos : constant Positive :=
-        Length (Yass_Conf.Markdown_Comment);
+      Start_Pos : constant Positive := Markdown_Comment'Length;
    begin
-      Open (File => Page_File,
-            Mode => In_File,
-            Name => File_Name);
+      Open (File => Page_File, Mode => In_File, Name => File_Name);
 
       Find_Layout_Name_Loop :
       while not End_Of_File (Page_File) loop
-         Data :=
-           To_Unbounded_String
-             (Source => Encode (Item => Get_Line (Page_File)));
+         Data := To_Unbounded_String (Source => Encode (Item => Get_Line (Page_File)));
 
          if Length (Data) > 2
-           and then
-             Unbounded_Slice (Source => Data,
-                              Low    => 1,
-                              High   => Start_Pos) =
-             Yass_Conf.Markdown_Comment
-           and then Index (Source  => Data,
-                           Pattern => "layout:",
-                           From    => 1) = Start_Pos + 2
+           and then Unbounded_Slice (Source => Data, Low => 1, High => Start_Pos)
+                    = Markdown_Comment
+           and then Index (Source => Data, Pattern => "layout:", From => 1)
+                    = Start_Pos + 2
          then
-            Data := Unbounded_Slice
-                      (Source => Data,
-                       Low    => 12,
-                       High   => Length (Data));
+            Data := Unbounded_Slice (Source => Data, Low => 12, High => Length (Data));
 
-            Layout := Yass_Conf.Layouts_Directory & Dir_Separator & Data &
-                        To_Unbounded_String (".html");
+            Layout :=
+              Layouts_Directory
+              & Dir_Separator
+              & Data
+              & To_Unbounded_String (".html");
 
-            if not Ada.Directories.Exists
-                (Name => To_String (Layout))
-            then
+            if not Ada.Directories.Exists (Name => To_String (Layout)) then
                Close (Page_File);
                raise Layout_Not_Found
-                 with File_Name & """. Selected layout file """ &
-                      To_String (Layout);
+                 with File_Name & """. Selected layout file """ & To_String (Layout);
             end if;
             Close (Page_File);
             return To_String (Layout);

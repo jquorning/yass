@@ -137,115 +137,98 @@ package body Monitors is
          -- Process_File --
          ------------------
 
-         procedure Process_File (Item : Directory_Entry_Type)
-         is
-            Site_File_Name : Unbounded_String :=
-              Yass_Conf.Output_Directory & Dir_Separator &
-              To_Unbounded_String
-                (Source => Simple_Name (Item));
+         procedure Process_File (Item : Directory_Entry_Type) is
+            Full : constant String := Full_Name (Item);
+
+            Site_File_Name_3 : constant String :=
+              Output_Directory & Dir_Separator & Simple_Name (Item);
          begin
-            if
-              Yass_Conf.Excluded_Files.Find_Index (Simple_Name (Item)) /=
-              Excluded_Container.No_Index or
-              not Ada.Directories.Exists (Full_Name (Item))
+            if Is_Excluded (Simple_Name (Item))
+              or not Ada.Directories.Exists (Full)
             then
                return;
             end if;
 
-            if
-              Containing_Directory (Full_Name (Item)) /=
-              To_String (Site_Directory)
-            then
-               Site_File_Name :=
-                 Yass_Conf.Output_Directory &
-                 Slice
-                   (Source => To_Unbounded_String (Full_Name (Item)),
-                    Low    => Length (Site_Directory) + 1,
-                    High   => Full_Name (Item)'Length);
-            end if;
+            declare
+               Site_File_Name_2 : constant String :=
+                 (if Containing_Directory (Full) /= Site_Directory
+                  then
+                    Output_Directory
+                    & Slice
+                        (Source => To_Unbounded_String (Full),
+                         Low    => Length (Site_Directory) + 1,
+                         High   => Full'Length)
+                  else Site_File_Name_3);
 
-            if Extension (Simple_Name (Item)) = "md" then
-               Site_File_Name :=
-                 To_Unbounded_String
-                   (Source =>
-                      Compose
-                        (Containing_Directory =>
-                           Containing_Directory
-                             (Name => To_String (Site_File_Name)),
-                         Name =>
-                           Ada.Directories.Base_Name
-                             (Name => To_String (Site_File_Name)),
-                         Extension => "html"));
-            end if;
+               Site_File_Name : constant String :=
+                 (if Extension (Simple_Name (Item)) = "md"
+                  then
+                    Compose
+                      (Containing_Directory =>
+                         Containing_Directory (Name => Site_File_Name_2),
+                       Name                 =>
+                         Ada.Directories.Base_Name (Name => Site_File_Name_2),
+                       Extension            => "html")
+                  else Site_File_Name_2);
+            begin
+               if not Ada.Directories.Exists (Site_File_Name) then
+                  Ada.Environment_Variables.Set (Name => "YASSFILE", Value => Full);
 
-            if not Ada.Directories.Exists (To_String (Site_File_Name)) then
-               Ada.Environment_Variables.Set
-                 (Name  => "YASSFILE",
-                  Value => Full_Name (Item));
+                  if Extension (Simple_Name (Item)) = "md" then
+                     Create_Page (File_Name => Full, Directory => Name);
+                  else
+                     Pages.Copy_File (File_Name => Full, Directory => Name);
+                  end if;
 
-               if Extension (Simple_Name (Item)) = "md" then
-                  Create_Page (File_Name => Full_Name (Item),
-                               Directory => Name);
-               else
-                  Pages.Copy_File (File_Name => Full_Name (Item),
-                                   Directory => Name);
-               end if;
+                  Log
+                    ("File: "
+                     & To_Relative
+                         (Full_Name => Site_File_Name,
+                          Base_Name => To_String (Site_Directory) & Dir_Separator)
+                     & " was added.");
 
-               Log ("File: " &
-                    To_Relative
-                      (Full_Name => To_String (Site_File_Name),
-                       Base_Name => To_String (Site_Directory) & Dir_Separator) &
-                    " was added.");
+                  Site_Rebuild := True;
 
-               Site_Rebuild := True;
+               elsif Extension (Simple_Name (Item)) = "md" then
+                  if Get_Layout_Name (Full) = "" then
+                     Log
+                       ("File: "
+                        & To_Relative
+                            (Full_Name => Full,
+                             Base_Name => To_String (Site_Directory) & Dir_Separator)
+                        & " has no layout");
+                  elsif Modification_Time (Full) > Modification_Time (Site_File_Name)
+                    or Modification_Time (Get_Layout_Name (Full))
+                       > Modification_Time (Site_File_Name)
+                  then
+                     Ada.Environment_Variables.Set (Name => "YASSFILE", Value => Full);
 
-            elsif Extension (Simple_Name (Item)) = "md" then
-               if Get_Layout_Name (Full_Name (Item)) = "" then
-                  Log ("File: " &
-                       To_Relative
-                         (Full_Name => Full_Name (Item),
-                          Base_Name => To_String (Site_Directory) & Dir_Separator) &
-                       " has no layout");
-               elsif
-                 Modification_Time (Full_Name (Item)) >
-                 Modification_Time (To_String (Site_File_Name)) or
-                 Modification_Time (Get_Layout_Name (Full_Name (Item))) >
-                 Modification_Time (To_String (Site_File_Name))
-               then
-                  Ada.Environment_Variables.Set (Name  => "YASSFILE",
-                                                 Value => Full_Name (Item));
+                     Create_Page (File_Name => Full, Directory => Name);
 
-                  Create_Page
-                    (File_Name => Full_Name (Item),
-                     Directory => Name);
+                     Log
+                       ("File: "
+                        & To_Relative
+                            (Full_Name => Site_File_Name,
+                             Base_Name => To_String (Site_Directory) & Dir_Separator)
+                        & " was updated.");
 
-                  Log ("File: " &
-                       To_Relative
-                         (Full_Name => To_String (Site_File_Name),
-                          Base_Name => To_String (Site_Directory) & Dir_Separator) &
-                       " was updated.");
+                     Site_Rebuild := True;
+                  end if;
+               elsif Modification_Time (Full) > Modification_Time (Site_File_Name) then
+                  Ada.Environment_Variables.Set (Name => "YASSFILE", Value => Full);
+
+                  Pages.Copy_File (File_Name => Full, Directory => Name);
+
+                  Log
+                    ("File: "
+                     & To_Relative
+                         (Full_Name => Site_File_Name,
+                          Base_Name => To_String (Site_Directory) & Dir_Separator)
+                     & " was updated.");
 
                   Site_Rebuild := True;
                end if;
-            elsif
-              Modification_Time (Full_Name (Item)) >
-              Modification_Time (To_String (Site_File_Name))
-            then
-               Ada.Environment_Variables.Set (Name  => "YASSFILE",
-                                              Value => Full_Name (Item));
-
-               Pages.Copy_File
-                 (File_Name => Full_Name (Item),
-                  Directory => Name);
-
-               Log ("File: " &
-                    To_Relative
-                      (Full_Name => To_String (Site_File_Name),
-                       Base_Name => To_String (Site_Directory) & Dir_Separator) &
-                    " was updated.");
-
-               Site_Rebuild := True;
-            end if;
+            end;
          end Process_File;
 
          -----------------------
@@ -254,10 +237,8 @@ package body Monitors is
 
          procedure Process_Directory (Item : Directory_Entry_Type) is
          begin
-            if
-              Yass_Conf.Excluded_Files.Find_Index (Simple_Name (Item)) =
-              Excluded_Container.No_Index and
-              Ada.Directories.Exists (Full_Name (Item))
+            if not Is_Excluded (Simple_Name (Item))
+              and Ada.Directories.Exists (Full_Name (Item))
             then
                Monitor_Directory (Full_Name (Item));
             end if;
@@ -283,8 +264,8 @@ package body Monitors is
 
             Log ("Site rebuilding has been interrupted.");
 
-            if Yass_Conf.Stop_Server_On_Error then
-               if Yass_Conf.Server_Enabled then
+            if Stop_Server_On_Error then
+               if Is_Server_Enabled then
                   Server.Shutdown_Server;
                   Messages.Show_Message (Text         => "done.",
                                          Message_Type => Messages.SUCCESS);
@@ -344,7 +325,7 @@ package body Monitors is
                end Stop;
             or
                --  Wait before next check
-               delay Yass_Conf.Monitor_Interval;
+               delay Monitor_Interval;
             end select;
          end loop Monitor_Site_Loop;
       or
@@ -388,7 +369,7 @@ package body Monitors is
                end Stop;
             or
                --  Wait before next check
-               delay Yass_Conf.Monitor_Config_Interval;
+               delay Monitor_Config_Interval;
             end select;
 
             -- Update configuration if needed
@@ -409,7 +390,7 @@ package body Monitors is
                Messages.Show_Message (Text         => "done",
                                       Message_Type => Messages.SUCCESS);
 
-               if Yass_Conf.Server_Enabled then
+               if Is_Server_Enabled then
                   Server.Start_Server;
                end if;
 

@@ -360,18 +360,12 @@ package body Modules is
       end Run_Module;
 
    begin
-      if not Exists
-          (Name =>
-             To_String (Yass_Conf.Modules_Directory) &
-             Dir_Separator & State)
-      then
+      if not Exists (Name => Modules_Directory & Dir_Separator & State) then
          return;
       end if;
 
       Search
-        (Directory =>
-           To_String (Yass_Conf.Modules_Directory) & Dir_Separator &
-           State,
+        (Directory => Modules_Directory & Dir_Separator & State,
          Pattern   => "",
          Filter    => (Directory => False, others => True),
          Process   => Run_Module'Access);

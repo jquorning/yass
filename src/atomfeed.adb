@@ -167,11 +167,8 @@ package body AtomFeed is
 
       Local_Entries : FeedEntry_Container.Vector := Get_Entries_List;
    begin
-      if Yass_Conf.Atom_Feed_Source =
-        To_Unbounded_String ("none")
-      then
-         Site_Tags.Include (Key      => "AtomLink",
-                            New_Item => "");
+      if Atom_Feed_Source = "none" then
+         Site_Tags.Include (Key => "AtomLink", New_Item => "");
          return;
       end if;
 
@@ -179,11 +176,11 @@ package body AtomFeed is
         (Key      => "AtomLink",
          New_Item =>
            "<link rel=""alternate"" type=""application/rss+xml"" title=""" &
-           To_String (Yass_Conf.Site_Name) & " Feed"" href=""" &
-           To_String (Yass_Conf.Base_Url) & "/atom.xml"" />");
+           Site_Name & " Feed"" href=""" &
+           Base_URL & "/atom.xml"" />");
 
       Feed_File_Name :=
-        Yass_Conf.Output_Directory &
+        Output_Directory &
         To_Unbounded_String (Dir_Separator & "atom.xml");
 
       if not Ada.Directories.Exists (Get_Feed_File_Name) then
@@ -284,21 +281,21 @@ package body AtomFeed is
       use Config;
 
       Url : constant String :=
-        To_String (Yass_Conf.Base_Url) & "/" &
+        Base_URL & "/" &
         Ada.Strings.Unbounded.Slice
           (Source => To_Unbounded_String (File_Name),
-           Low    => Length (Yass_Conf.Output_Directory & Dir_Separator) + 1,
+           Low    => String'(Output_Directory & Dir_Separator)'Length + 1,
            High   => File_Name'Length);
 
       Entry_Index   : Natural := 0;
       Local_Entries : FeedEntry_Container.Vector := Get_Entries_List;
    begin
       if
-        Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("none") or
-        (Yass_Conf.Atom_Feed_Source /= To_Unbounded_String ("tags") and then
+        Atom_Feed_Source = "none" or
+        (Atom_Feed_Source /= "tags" and then
            Index
              (Source  => File_Name,
-              Pattern => To_String (Yass_Conf.Atom_Feed_Source),
+              Pattern => Atom_Feed_Source,
               From    => 1) = 0)
       then
          return;
@@ -482,7 +479,7 @@ package body AtomFeed is
       end Add_Author;
 
    begin
-      if Yass_Conf.Atom_Feed_Source = To_Unbounded_String ("none") or
+      if Atom_Feed_Source = "none" or
         FeedEntry_Container.Length (Container => Get_Entries_List) = 0
       then
          return;
@@ -501,15 +498,15 @@ package body AtomFeed is
                                  New_Child => Main_Node);
       Add_Link
         (Parent_Node  => Main_Node,
-         Url          => To_String (Yass_Conf.Base_Url) & "/atom.xml",
+         Url          => Base_URL & "/atom.xml",
          Relationship => "self");
       Add_Node
         (Node_Name   => "id",
-         Node_Value  => To_String (Yass_Conf.Base_Url) & "/",
+         Node_Value  => Base_URL & "/",
          Parent_Node => Main_Node);
       Add_Node
         (Node_Name   => "title",
-         Node_Value  => To_String (Yass_Conf.Site_Name),
+         Node_Value  => Site_Name,
          Parent_Node => Main_Node);
       Add_Node
         (Node_Name   => "updated",
@@ -517,8 +514,8 @@ package body AtomFeed is
          Parent_Node => Main_Node);
       Add_Author
         (Parent_Node => Main_Node,
-         Name        => To_String (Yass_Conf.Author_Name),
-         Email       => To_String (Yass_Conf.Author_Email));
+         Name        => Author_Name,
+         Email       => Author_Email);
 
       Add_Entries_Loop :
       for FeedEntry of Local_Entries loop
@@ -568,7 +565,7 @@ package body AtomFeed is
 
          Entries_Amount := Entries_Amount + 1;
 
-         exit Add_Entries_Loop when Entries_Amount = Yass_Conf.Atom_Feed_Amount;
+         exit Add_Entries_Loop when Entries_Amount = Atom_Feed_Amount;
       end loop Add_Entries_Loop;
 
       Create (File => Atom_File,

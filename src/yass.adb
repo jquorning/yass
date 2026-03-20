@@ -104,12 +104,8 @@ is
 
          procedure Process_Files (Item : Directory_Entry_Type) is
          begin
-            if
-              Yass_Conf.Excluded_Files.Find_Index
-                (Item => Simple_Name (Directory_Entry => Item)) /=
-              Excluded_Container.No_Index or
-              not Ada.Directories.Exists
-                (Name => Full_Name (Directory_Entry => Item))
+            if Is_Excluded (Simple_Name (Directory_Entry => Item))
+              or not Ada.Directories.Exists (Name => Full_Name (Directory_Entry => Item))
             then
                return;
             end if;
@@ -137,12 +133,8 @@ is
 
          procedure Process_Directories (Item : Directory_Entry_Type) is
          begin
-            if
-              Yass_Conf.Excluded_Files.Find_Index
-                (Item => Simple_Name (Directory_Entry => Item)) =
-              Excluded_Container.No_Index and
-              Ada.Directories.Exists
-                (Name => Full_Name (Directory_Entry => Item))
+            if not Is_Excluded (Simple_Name (Directory_Entry => Item))
+              and Ada.Directories.Exists (Name => Full_Name (Directory_Entry => Item))
             then
                Build (Name => Full_Name (Directory_Entry => Item));
             end if;
@@ -466,27 +458,22 @@ begin
 
       Load_Site_Config (Directory_Name => To_String (Work_Directory));
 
-      if not Ada.Directories.Exists
-          (Name => To_String (Yass_Conf.Output_Directory))
-      then
-         Create_Path
-           (New_Directory => To_String (Yass_Conf.Output_Directory));
+      if not Ada.Directories.Exists (Output_Directory) then
+         Create_Path (New_Directory => Output_Directory);
       end if;
 
-      Set_Directory (Directory => To_String (Yass_Conf.Output_Directory));
+      Set_Directory (Output_Directory);
 
-      if Yass_Conf.Server_Enabled then
+      if Is_Server_Enabled then
          if not Ada.Directories.Exists
-             (Name =>
-                To_String (Yass_Conf.Layouts_Directory) &
-                Dir_Separator & "directory.html")
+                  (Layouts_Directory & Dir_Separator & "directory.html")
          then
             Layouts.Create_Directory_Layout (Directory_Name => "");
          end if;
 
          Server.Start_Server;
 
-         if Yass_Conf.Browser_Command /= To_Unbounded_String ("none") then
+         if Browser_Command /= "none" then
 
             Start_Web_Browser_Block :
             declare
@@ -494,7 +481,7 @@ begin
 
                Args : Argument_List_Access :=
                  Argument_String_To_List
-                   (Arg_String => To_String (Yass_Conf.Browser_Command));
+                   (Arg_String => Browser_Command);
             begin
                if not Ada.Directories.Exists (Name => Args (Args'First).all)
                  or else
@@ -528,7 +515,7 @@ begin
       Monitors.Monitor_Config.Start;
 
       AWS.Server.Wait (Mode => AWS.Server.Q_Key_Pressed);
-      if Yass_Conf.Server_Enabled then
+      if Is_Server_Enabled then
          Server.Shutdown_Server;
       else
          Put (Item => "Stopping monitoring site changes...");

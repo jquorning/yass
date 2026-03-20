@@ -32,50 +32,51 @@ package body Config is
    -- Create_Site_Config --
    ------------------------
 
-   procedure Create_Site_Config (Directory_Name : String)
-   is
+   procedure Create_Site_Config (Directory_Name : String) is
       use Ada.Characters.Handling;
       use Ada.Text_IO;
 
       Config_File : File_Type;
 
-      Image_Site_Name           : constant String := To_String (Yass_Conf.Site_Name);
-      Image_Description         : constant String := To_String (Yass_Conf.Description);
-      Image_Language            : constant String := To_String (Yass_Conf.Language);
-      Image_Author_Name         : constant String := To_String (Yass_Conf.Author_Name);
-      Image_Author_Email        : constant String := To_String (Yass_Conf.Author_Email);
-      Image_Base_URL            : constant String := To_String (Yass_Conf.Base_Url);
-      Image_Atom_Feed_Source    : constant String :=
-         To_String (Yass_Conf.Atom_Feed_Source);
-      Image_Atom_Feed_Amount    : constant String := Yass_Conf.Atom_Feed_Amount'Image;
-      Image_Sitemap_Enabled     : constant String :=
-         To_Lower (Yass_Conf.Sitemap_Enabled'Image);
-      Image_HTML_Enabled        : constant String :=
-         To_Lower (Yass_Conf.HTML_Enabled'Image);
-      Image_Server_Enabled      : constant String :=
-         To_Lower (Yass_Conf.Server_Enabled'Image);
-      Image_Server_Port         : constant String := Yass_Conf.Server_Port'Image;
-      Image_Stop_Server_On_Error : constant String :=
-         To_Lower (Yass_Conf.Stop_Server_On_Error'Image);
-      Image_Browser_Command     : constant String :=
-         To_String (Yass_Conf.Browser_Command);
-      Image_Monitor_Interval    : constant String :=
-         Yass_Conf.Monitor_Config_Interval'Image;
+      Image_Site_Name               : constant String := To_String (Yass_Conf.Site_Name);
+      Image_Description             : constant String :=
+        To_String (Yass_Conf.Description);
+      Image_Language                : constant String := To_String (Yass_Conf.Language);
+      Image_Author_Name             : constant String :=
+        To_String (Yass_Conf.Author_Name);
+      Image_Author_Email            : constant String :=
+        To_String (Yass_Conf.Author_Email);
+      Image_Base_URL                : constant String := To_String (Yass_Conf.Base_Url);
+      Image_Atom_Feed_Source        : constant String :=
+        To_String (Yass_Conf.Atom_Feed_Source);
+      Image_Atom_Feed_Amount        : constant String := Yass_Conf.Atom_Feed_Amount'Image;
+      Image_Sitemap_Enabled         : constant String :=
+        To_Lower (Yass_Conf.Sitemap_Enabled'Image);
+      Image_HTML_Enabled            : constant String :=
+        To_Lower (Yass_Conf.HTML_Enabled'Image);
+      Image_Server_Enabled          : constant String :=
+        To_Lower (Yass_Conf.Server_Enabled'Image);
+      Image_Server_Port             : constant String := Yass_Conf.Server_Port'Image;
+      Image_Stop_Server_On_Error    : constant String :=
+        To_Lower (Yass_Conf.Stop_Server_On_Error'Image);
+      Image_Browser_Command         : constant String :=
+        To_String (Yass_Conf.Browser_Command);
+      Image_Monitor_Interval        : constant String :=
+        Yass_Conf.Monitor_Config_Interval'Image;
       Image_Monitor_Config_Interval : constant String :=
-         Yass_Conf.Monitor_Config_Interval'Image;
-      Image_Start_Tag_Separator : constant String :=
-         To_String (Yass_Conf.Start_Tag_Separator);
-      Image_End_Tag_Separator   : constant String :=
-         To_String (Yass_Conf.End_Tag_Separator);
-      Image_Markdown_Comment    : constant String :=
-         To_String (Yass_Conf.Markdown_Comment);
+        Yass_Conf.Monitor_Config_Interval'Image;
+      Image_Start_Tag_Separator     : constant String :=
+        To_String (Yass_Conf.Start_Tag_Separator);
+      Image_End_Tag_Separator       : constant String :=
+        To_String (Yass_Conf.End_Tag_Separator);
+      Image_Markdown_Comment        : constant String :=
+        To_String (Yass_Conf.Markdown_Comment);
 
       procedure PL (Item : String);
 
       procedure PL (Item : String) is
       begin
-         Put_Line (File => Config_File,
-                   Item => Item);
+         Put_Line (File => Config_File, Item => Item);
       end PL;
 
    begin
@@ -238,8 +239,7 @@ package body Config is
    -- Load_Site_Config --
    ----------------------
 
-   procedure Load_Site_Config (Directory_Name : String)
-   is
+   procedure Load_Site_Config (Directory_Name : String) is
       use Ada.Strings.UTF_Encoding.Strings;
       use Ada.Characters.Handling;
       use Ada.Directories;
@@ -256,19 +256,14 @@ package body Config is
 
       procedure Normalize_Dir (Directory_Path : in out Unbounded_String);
 
-      procedure Normalize_Dir (Directory_Path : in out Unbounded_String)
-      is
+      procedure Normalize_Dir (Directory_Path : in out Unbounded_String) is
       begin
-         if Dir_Separator = '/'
-           and then Element (Directory_Path, Index => 1) /= '/'
-         then
+         if Dir_Separator = '/' and then Element (Directory_Path, Index => 1) /= '/' then
             Directory_Path :=
-              To_Unbounded_String (Directory_Name & Dir_Separator) &
-              Directory_Path;
+              To_Unbounded_String (Directory_Name & Dir_Separator) & Directory_Path;
          elsif Element (Directory_Path, Index => 2) /= ':' then
             Directory_Path :=
-              To_Unbounded_String (Directory_Name & Dir_Separator) &
-              Directory_Path;
+              To_Unbounded_String (Directory_Name & Dir_Separator) & Directory_Path;
          end if;
       end Normalize_Dir;
 
@@ -276,19 +271,13 @@ package body Config is
       Site_Tags.Clear;
       Global_Table_Tags.Clear;
 
-      Open (File => Config_File,
-            Mode => In_File,
-            Name => Directory_Name & "/site.cfg");
+      Open (File => Config_File, Mode => In_File, Name => Directory_Name & "/site.cfg");
 
       Load_Configuration_Loop :
       while not End_Of_File (Config_File) loop
-         Raw_Data :=
-           To_Unbounded_String (Encode (Get_Line (Config_File)));
+         Raw_Data := To_Unbounded_String (Encode (Get_Line (Config_File)));
 
-         if
-           Length (Raw_Data) = 0 or else
-           Element (Raw_Data, Index => 1) = '#'
-         then
+         if Length (Raw_Data) = 0 or else Element (Raw_Data, Index => 1) = '#' then
             goto End_Of_Loop;
          end if;
 
@@ -299,7 +288,7 @@ package body Config is
          end if;
 
          Field_Name := Head (Raw_Data, Count => Equal_Index - 2);
-         Value      := Tail (Raw_Data, Count => Length (Raw_Data) - Equal_Index - 1);
+         Value := Tail (Raw_Data, Count => Length (Raw_Data) - Equal_Index - 1);
 
          if Field_Name = "LayoutsDirectory" then
             Yass_Conf.Layouts_Directory := Value;
@@ -316,9 +305,7 @@ package body Config is
 
                Tokens : Slice_Set; --## rule line off IMPROPER_INITIALIZATION
             begin
-               Create (S          => Tokens,
-                       From       => To_String (Value),
-                       Separators => ",");
+               Create (S => Tokens, From => To_String (Value), Separators => ",");
 
                Add_Excluded_Files_Loop :
                for I in 1 .. Slice_Count (S => Tokens) loop
@@ -328,19 +315,17 @@ package body Config is
             end;
 
          elsif Field_Name = "ServerEnabled" then
-            Yass_Conf.Server_Enabled :=
-               To_Lower (To_String (Value)) = "true";
+            Yass_Conf.Server_Enabled := To_Lower (To_String (Value)) = "true";
 
          elsif Field_Name = "ServerPort" then
-            Yass_Conf.Server_Port :=
-              Positive'Value (To_String (Value));
+            Yass_Conf.Server_Port := Positive'Value (To_String (Value));
             if Yass_Conf.Server_Port > 65_535 then
                raise Invalid_Config_Data with To_String (Raw_Data);
             end if;
 
          elsif Field_Name = "StopServerOnError" then
             Yass_Conf.Stop_Server_On_Error :=
-               To_Lower (Item => To_String (Value)) = "true";
+              To_Lower (Item => To_String (Value)) = "true";
 
          elsif Field_Name = "BrowserCommand" then
             if Index (Value, Pattern => "%s", From => 1) > 0 then
@@ -348,52 +333,46 @@ package body Config is
                  (Source => Value,
                   Low    => Index (Value, Pattern => "%s", From => 1),
                   High   => Index (Value, Pattern => "%s", From => 1) + 1,
-                  By     => "http://localhost:" &
-                    Trim
-                      (Source => Positive'Image (Yass_Conf.Server_Port),
-                       Side   => Ada.Strings.Left));
+                  By     =>
+                    "http://localhost:"
+                    & Trim
+                        (Source => Positive'Image (Yass_Conf.Server_Port),
+                         Side   => Ada.Strings.Left));
             end if;
             Yass_Conf.Browser_Command := Value;
 
          elsif Field_Name = "MonitorInterval" then
-            Yass_Conf.Monitor_Interval :=
-              Duration'Value (To_String (Value));
+            Yass_Conf.Monitor_Interval := Duration'Value (To_String (Value));
 
          elsif Field_Name = "MonitorConfigInterval" then
-            Yass_Conf.Monitor_Config_Interval :=
-              Duration'Value (To_String (Value));
+            Yass_Conf.Monitor_Config_Interval := Duration'Value (To_String (Value));
 
          elsif Field_Name = "BaseURL" then
             Yass_Conf.Base_Url := Value;
-            Site_Tags.Include
-              (Key => "BaseURL", New_Item => To_String (Value));
+            Site_Tags.Include (Key => "BaseURL", New_Item => To_String (Value));
 
          elsif Field_Name = "SitemapEnabled" then
-            Yass_Conf.Sitemap_Enabled :=
-               To_Lower (To_String (Value)) = "true";
+            Yass_Conf.Sitemap_Enabled := To_Lower (To_String (Value)) = "true";
 
          elsif Field_Name = "HTMLEnabled" then
-            Yass_Conf.HTML_Enabled :=
-               To_Lower (To_String (Value)) = "true";
+            Yass_Conf.HTML_Enabled := To_Lower (To_String (Value)) = "true";
 
          elsif Field_Name = "AtomFeedSource" then
             if To_String (Value) in "none" | "tags" then
                Yass_Conf.Atom_Feed_Source := Value;
             else
                Yass_Conf.Atom_Feed_Source :=
-                 Unbounded_Slice
-                   (Source => Value, Low => 1,
-                    High   => Length (Value) - 2) & "html";
+                 Unbounded_Slice (Source => Value, Low => 1, High => Length (Value) - 2)
+                 & "html";
             end if;
 
          elsif Field_Name = "AtomFeedAmount" then
-            Yass_Conf.Atom_Feed_Amount :=
-              Positive'Value (To_String (Value));
+            Yass_Conf.Atom_Feed_Amount := Positive'Value (To_String (Value));
 
          elsif Field_Name = "Name" then
             Yass_Conf.Site_Name := Value;
-            Site_Tags.Include (Key      => To_String (Field_Name),
-                               New_Item => To_String (Value));
+            Site_Tags.Include
+              (Key => To_String (Field_Name), New_Item => To_String (Value));
 
          elsif Field_Name = "StartTagSeparator" then
             Yass_Conf.Start_Tag_Separator := Value;
@@ -413,12 +392,10 @@ package body Config is
          elsif Field_Name = "Language" then
             Yass_Conf.Language := Value;
             Site_Tags.Include
-              (Key      => To_String (Field_Name),
-               New_Item => To_String (Value));
+              (Key => To_String (Field_Name), New_Item => To_String (Value));
 
          elsif Value = "[]" then
-            Global_Table_Tags.Include (Key      => To_String (Field_Name),
-                                       New_Item => +"");
+            Global_Table_Tags.Include (Key => To_String (Field_Name), New_Item => +"");
             Clear (T => Global_Table_Tags (To_String (Field_Name)));
 
          elsif Global_Table_Tags.Contains (Key => To_String (Field_Name)) then
@@ -427,8 +404,7 @@ package body Config is
 
          else
             Site_Tags.Include
-              (Key      => To_String (Field_Name),
-               New_Item => To_String (Value));
+              (Key => To_String (Field_Name), New_Item => To_String (Value));
          end if;
 
          <<End_Of_Loop>>
@@ -444,14 +420,11 @@ package body Config is
       Yass_Conf.Excluded_Files.Append ("..");
       Yass_Conf.Excluded_Files.Append ("site.cfg");
       Yass_Conf.Excluded_Files.Append
-        (Simple_Name
-          (Name => To_String (Yass_Conf.Layouts_Directory)));
+        (Simple_Name (Name => To_String (Yass_Conf.Layouts_Directory)));
       Yass_Conf.Excluded_Files.Append
-        (Simple_Name
-          (Name => To_String (Yass_Conf.Output_Directory)));
+        (Simple_Name (Name => To_String (Yass_Conf.Output_Directory)));
       Yass_Conf.Excluded_Files.Append
-        (Simple_Name
-          (Name => To_String (Yass_Conf.Modules_Directory)));
+        (Simple_Name (Name => To_String (Yass_Conf.Modules_Directory)));
 
       Site_Directory := To_Unbounded_String (Directory_Name);
 
@@ -469,8 +442,7 @@ package body Config is
 
    function Ask_User (Default : String) return Unbounded_String;
 
-   function Ask_User (Default : String) return Unbounded_String
-   is
+   function Ask_User (Default : String) return Unbounded_String is
       use Ada.Text_IO;
 
       Answer : Unbounded_String;
@@ -488,8 +460,7 @@ package body Config is
    -- Interactive_Site_Config --
    -----------------------------
 
-   procedure Interactive_Site_Config
-   is
+   procedure Interactive_Site_Config is
       use Ada.Text_IO;
 
       Answer_1, Answer_2, Answer_3 : Unbounded_String;
@@ -639,8 +610,7 @@ package body Config is
          Put_Line ("in the site files?");
          New_Line;
 
-         Yass_Conf.Monitor_Interval :=
-            Duration'Value (To_String (Ask_User ("5.0")));
+         Yass_Conf.Monitor_Interval := Duration'Value (To_String (Ask_User ("5.0")));
          New_Line;
 
          Put_Line ("How often, in seconds, the program should check for changes");
@@ -648,7 +618,7 @@ package body Config is
          New_Line;
 
          Yass_Conf.Monitor_Config_Interval :=
-            Duration'Value (To_String (Ask_User ("60.0")));
+           Duration'Value (To_String (Ask_User ("60.0")));
          New_Line;
       end if;
 
@@ -681,4 +651,70 @@ package body Config is
 
    end Interactive_Site_Config;
 
+   -----------------
+   -- Is_Excluded --
+   -----------------
+
+   function Is_Excluded (File : String) return Boolean is
+      use Excluded_Container;
+   begin
+      return not Has_Element (Yass_Conf.Excluded_Files.Find (File));
+   end Is_Excluded;
+
+   function Site_Name return String
+   is (To_String (Yass_Conf.Site_Name));
+
+   function Output_Directory return String
+   is (To_String (Yass_Conf.Output_Directory));
+
+   function Layouts_Directory return String
+   is (To_String (Yass_Conf.Layouts_Directory));
+
+   function Modules_Directory return String
+   is (To_String (Yass_Conf.Modules_Directory));
+
+   function Base_URL return String
+   is (To_String (Yass_Conf.Base_Url));
+
+   function Markdown_Comment return String
+   is (To_String (Yass_Conf.Markdown_Comment));
+
+   function Author_Name return String
+   is (To_String (Yass_Conf.Author_Name));
+
+   function Author_Email return String
+   is (To_String (Yass_Conf.Author_Email));
+
+   function Is_Sitemap_Enabled return Boolean
+   is (Yass_Conf.Sitemap_Enabled);
+
+   function Atom_Feed_Source return String
+   is (To_String (Yass_Conf.Atom_Feed_Source));
+
+   function Atom_Feed_Amount return Positive
+   is (Yass_Conf.Atom_Feed_Amount);
+
+   function Is_HTML_Enabled return Boolean
+   is (Yass_Conf.HTML_Enabled);
+
+   function Is_Server_Enabled return Boolean
+   is (Yass_Conf.Server_Enabled);
+
+   function Stop_Server_On_Error return Boolean
+   is (Yass_Conf.Stop_Server_On_Error);
+
+   function Monitor_Interval return Duration
+   is (Yass_Conf.Monitor_Interval);
+
+   function Monitor_Config_Interval return Duration
+   is (Yass_Conf.Monitor_Config_Interval);
+
+   function Browser_Command return String
+   is (To_String (Yass_Conf.Browser_Command));
+
+   function Server_Port return Positive
+   is (Yass_Conf.Server_Port);
+
+begin
+   Yass_Conf := Default_Parser_Configuration;
 end Config;
